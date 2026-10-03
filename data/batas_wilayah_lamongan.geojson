@@ -1,0 +1,22 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "nama_kabupaten": "Lamongan",
+        "id_kabupaten": 1
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [112.251, -7.025],
+          [112.251, -7.225],
+          [112.451, -7.225],
+          [112.451, -7.025],
+          [112.251, -7.025]
+        ]]
+      }
+    }
+  ]
+}

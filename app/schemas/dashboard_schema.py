@@ -4,7 +4,6 @@ from datetime import datetime
 
 class DashboardWargaResponse(BaseModel):
     user: dict
-    kategori_fasilitas: List[dict]
     statistik_wilayah: dict
     statistik_harian: List[dict]
     statistik_mingguan: List[dict]

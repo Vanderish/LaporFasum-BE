@@ -28,16 +28,6 @@ def get_dashboard_warga(current_user: dict):
         cursor.execute(query_user, (id_user,))
         user_data = cursor.fetchone()
         
-        # 2. Kategori Fasilitas Umum (limit 6 maks)
-        query_kategori = """
-            SELECT id_kategori, nama_kategori 
-            FROM kategori_fasilitas 
-            ORDER BY nama_kategori
-            LIMIT 6
-        """
-        cursor.execute(query_kategori)
-        kategori_fasilitas = cursor.fetchall()
-        
         # 3-5. Statistik Laporan di Wilayah User (Kecamatan)
         query_statistik_wilayah = """
             SELECT 
@@ -119,7 +109,6 @@ def get_dashboard_warga(current_user: dict):
         
         return {
             "user": user_data,
-            "kategori_fasilitas": kategori_fasilitas,
             "statistik_wilayah": statistik_wilayah,
             "statistik_harian": statistik_harian,
             "statistik_mingguan": statistik_mingguan,

@@ -5,15 +5,15 @@ from app.api.deps import get_current_user, get_current_admin_kecamatan_role
 
 router = APIRouter(prefix="/dashboard", tags=["Dashboard & SIG"])
 
-@router.get("/warga")
+@router.get("/user", response_model=DashboardWargaResponse)
 def dashboard_warga(current_user: dict = Depends(get_current_user)):
     return dashboard_controller.get_dashboard_warga(current_user)
 
-@router.get("/admin")
+@router.get("/admin", response_model=DashboardAdminResponse)
 def dashboard_admin(current_user: dict = Depends(get_current_admin_kecamatan_role)):
     return dashboard_controller.get_dashboard_admin(current_user)
 
-@router.get("/heatmap")
+@router.get("/heatmap", response_model=HeatmapResponse)
 def get_heatmap(current_user: dict = Depends(get_current_user)):
     return dashboard_controller.get_heatmap_data()
 

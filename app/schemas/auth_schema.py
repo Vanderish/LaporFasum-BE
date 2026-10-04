@@ -11,7 +11,7 @@ class UserRegister(BaseModel):
     id_kabupaten: Optional[int] = None
 
 class UserLogin(BaseModel):
-    email: str
+    identifier: str  # Bisa email atau NIK
     password: str
 
 class Token(BaseModel):

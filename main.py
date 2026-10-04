@@ -17,13 +17,6 @@ load_dotenv()
 
 app = FastAPI(title="Sistem Pelaporan Fasilitas Umum")
 
-origins = [
-    "http://localhost:3000",
-    "http://localhost:5173",
-    "http://10.253.129.98:5174/",
-    "https://98rp1d00-8000.asse.devtunnels.ms/"
-]
-
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -32,16 +25,12 @@ app.add_middleware(
     allow_headers=["*"]
 )
 
-# Konfigurasi Cloudinary bisa diletakkan saat aplikasi berjalan (on startup)
-# atau di-load dari file core/config.py
 cloudinary.config(
-  cloud_name = "nama_cloud_kamu",
-  api_key = "api_key_kamu",
-  api_secret = "api_secret_kamu"
+  cloud_name = os.getenv("CLOUDINARY_CLOUD_NAME", "nama_cloud_kamu"),
+  api_key = os.getenv("CLOUDINARY_API_KEY", "api_key_kamu"),
+  api_secret = os.getenv("CLOUDINARY_API_SECRET", "api_secret_kamu")
 )
 
-# Mendaftarkan router modular
-# app.include_router(laporan_route.router)
 app.include_router(auth_route.router)
 app.include_router(user_route.router)
 app.include_router(admin_kecamatan_route.router)

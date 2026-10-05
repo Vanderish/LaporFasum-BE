@@ -13,21 +13,6 @@ def get_dashboard_warga(current_user: dict):
         id_user = current_user.get("id_user")
         id_kecamatan = current_user.get("id_kecamatan")
         
-        # 1. Data User
-        query_user = """
-            SELECT u.id_user, u.nik, u.email, u.nama_lengkap, u.alamat_domisili,
-                   u.id_role, r.nama_role,
-                   k.id_kecamatan, k.nama_kecamatan,
-                   kb.id_kabupaten, kb.nama_kabupaten
-            FROM users u
-            LEFT JOIN roles r ON u.id_role = r.id_role
-            LEFT JOIN kecamatan k ON u.id_kecamatan = k.id_kecamatan
-            LEFT JOIN kabupaten kb ON u.id_kabupaten = kb.id_kabupaten
-            WHERE u.id_user = %s
-        """
-        cursor.execute(query_user, (id_user,))
-        user_data = cursor.fetchone()
-        
         # 3-5. Statistik Laporan di Wilayah User (Kecamatan)
         query_statistik_wilayah = """
             SELECT 
@@ -108,7 +93,6 @@ def get_dashboard_warga(current_user: dict):
         notifikasi = cursor.fetchall()
         
         return {
-            "user": user_data,
             "statistik_wilayah": statistik_wilayah,
             "statistik_harian": statistik_harian,
             "statistik_mingguan": statistik_mingguan,

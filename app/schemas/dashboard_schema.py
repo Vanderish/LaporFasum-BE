@@ -3,7 +3,6 @@ from typing import Optional, List
 from datetime import datetime
 
 class DashboardWargaResponse(BaseModel):
-    user: dict
     statistik_wilayah: dict
     statistik_harian: List[dict]
     statistik_mingguan: List[dict]

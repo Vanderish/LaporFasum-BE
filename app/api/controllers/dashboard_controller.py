@@ -69,10 +69,10 @@ def get_dashboard_warga(current_user: dict):
         
         # 7. Laporan User dengan date terbaru (limit 5 maks)
         query_laporan_terbaru = """
-            SELECT l.id_laporan, l.judul_laporan, l.foto_bukti, l.status_terkini, l.created_at AS waktu_lapor,
+            SELECT l.id_laporan, l.judul_laporan, l.deskripsi_laporan, l.foto_bukti, l.status_terkini, l.created_at AS waktu_lapor,
                    k.nama_kategori, kec.nama_kecamatan
             FROM laporan l
-            JOIN kategori_fasilitas k ON l.id_kategori = k.id_kategori
+            LEFT JOIN kategori_fasilitas k ON l.id_kategori = k.id_kategori
             JOIN kecamatan kec ON l.id_kecamatan_kejadian = kec.id_kecamatan
             WHERE l.id_pelapor = %s
             ORDER BY l.created_at DESC
@@ -81,24 +81,12 @@ def get_dashboard_warga(current_user: dict):
         cursor.execute(query_laporan_terbaru, (id_user,))
         laporan_terbaru = cursor.fetchall()
         
-        # 8. Notifikasi (limit 10 maks)
-        query_notifikasi = """
-            SELECT id_notifikasi, id_laporan, judul, pesan, tipe_notifikasi, is_read, created_at
-            FROM notifikasi
-            WHERE id_user = %s
-            ORDER BY created_at DESC
-            LIMIT 10
-        """
-        cursor.execute(query_notifikasi, (id_user,))
-        notifikasi = cursor.fetchall()
-        
         return {
             "statistik_wilayah": statistik_wilayah,
             "statistik_harian": statistik_harian,
             "statistik_mingguan": statistik_mingguan,
             "statistik_bulanan": statistik_bulanan,
-            "laporan_terbaru": laporan_terbaru,
-            "notifikasi": notifikasi
+            "laporan_terbaru": laporan_terbaru
         }
     finally:
         cursor.close()
@@ -133,7 +121,7 @@ def get_dashboard_admin(current_user: dict):
         query_kategori = """
             SELECT k.nama_kategori, COUNT(l.id_laporan) AS jumlah_laporan
             FROM laporan l
-            JOIN kategori_fasilitas k ON l.id_kategori = k.id_kategori
+            LEFT JOIN kategori_fasilitas k ON l.id_kategori = k.id_kategori
             GROUP BY k.id_kategori, k.nama_kategori
             ORDER BY jumlah_laporan DESC
         """

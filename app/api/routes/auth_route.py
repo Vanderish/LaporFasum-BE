@@ -59,12 +59,16 @@ def get_kecamatan():
 
 @router.get("/me")
 def get_current_user_profile(current_user: dict = Depends(get_current_user)):
+    id_user = current_user.get("id_user")
+    stats = auth_controller.get_user_laporan_stats(id_user)
     return {
-        "id_user": current_user.get("id_user"),
+        "id_user": id_user,
+        "nik": current_user.get("nik"),
         "email": current_user.get("email"),
         "nama_lengkap": current_user.get("nama_lengkap"),
         "alamat_domisili": current_user.get("alamat_domisili"),
         "id_role": current_user.get("id_role"),
         "id_kecamatan": current_user.get("id_kecamatan"),
-        "id_kabupaten": current_user.get("id_kabupaten")
+        "id_kabupaten": current_user.get("id_kabupaten"),
+        "statistik_laporan": stats
     }

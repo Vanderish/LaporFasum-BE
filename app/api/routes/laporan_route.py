@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, UploadFile, File, Form, Query
+from fastapi import APIRouter, Depends, UploadFile, File, Form, Query, BackgroundTasks
 from app.schemas.laporan_schema import LaporanCreate, LaporanUpdateStatus, LaporanResponse, RiwayatStatusResponse
 from app.api.controllers import laporan_controller
 from app.api.deps import get_current_user, get_current_admin_role
@@ -8,21 +8,21 @@ router = APIRouter(prefix="/laporan", tags=["Laporan & Tracking"])
 
 @router.post("", response_model=dict)
 def create_laporan(
+    background_tasks: BackgroundTasks,
     judul_laporan: str = Form(...),
     deskripsi: str = Form(...),
     latitude: float = Form(...),
     longitude: float = Form(...),
-    id_kategori: int = Form(...),
-    id_kecamatan_kejadian: int = Form(None),
+    id_kecamatan_kejadian: Optional[int] = Form(None),
     foto_bukti: UploadFile = File(...),
     current_user: dict = Depends(get_current_user)
 ):
     return laporan_controller.create_laporan(
+        background_tasks=background_tasks,
         judul_laporan=judul_laporan,
         deskripsi=deskripsi,
         latitude=latitude,
         longitude=longitude,
-        id_kategori=id_kategori,
         id_kecamatan_kejadian=id_kecamatan_kejadian,
         foto_bukti=foto_bukti,
         current_user=current_user
@@ -47,8 +47,16 @@ def get_laporan_list(
     )
 
 @router.get("/saya")
-def get_laporan_saya(current_user: dict = Depends(get_current_user)):
-    return laporan_controller.get_laporan_saya(current_user)
+def get_laporan_saya(
+    page: int = Query(1, ge=1, description="Page number"),
+    limit: int = Query(10, ge=1, le=100, description="Items per page"),
+    current_user: dict = Depends(get_current_user)
+):
+    return laporan_controller.get_laporan_saya(
+        current_user=current_user,
+        page=page,
+        limit=limit
+    )
 
 @router.get("/{id_laporan}")
 def get_laporan_by_id(id_laporan: int, current_user: dict = Depends(get_current_user)):

@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from app.api.routes import auth_route
 from app.api.routes import user_route
 from app.api.routes import admin_kecamatan_route
@@ -11,15 +12,24 @@ import cloudinary
 from dotenv import load_dotenv
 import os
 
-from fastapi.middleware.cors import CORSMiddleware
-
 load_dotenv()
 
 app = FastAPI(title="Sistem Pelaporan Fasilitas Umum")
 
+# CORS Configuration
+origins = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "http://localhost:5173",
+    "http://192.168.11.69:5173",
+    "http://localhost",
+    "capacitor://localhost",
+    "https://98rp1d00-8000.asse.devtunnels.ms",
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"]

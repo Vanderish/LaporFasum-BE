@@ -12,17 +12,14 @@ def get_current_user(token: str = Depends(oauth2_scheme)):
         headers={"WWW-Authenticate": "Bearer"},
     )
     try:
-        # Dekode tanpa memverifikasi signature terlebih dahulu untuk mendapatkan id_role
-        unverified_payload = jwt.get_unverified_claims(token)
-        id_role = unverified_payload.get("id_role")
+        unverified_claims = jwt.get_unverified_claims(token)
         
-        if id_role is None:
+        if "id_role" not in unverified_claims:
             raise credentials_exception
             
-        # Ambil secret yang benar sesuai rolenya
+        id_role = unverified_claims["id_role"]
         secret_key = get_secret_by_role(id_role)
         
-        # Dekode dan verifikasi dengan secret yang benar
         payload = jwt.decode(token, secret_key, algorithms=[ALGORITHM])
         
         id_user = payload.get("id_user")

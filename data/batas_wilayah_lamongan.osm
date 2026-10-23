@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<osm version="0.6" generator="openstreetmap-cgimap 2.1.0 (1296 spike-08.openstreetmap.org)" copyright="OpenStreetMap and contributors" attribution="http://www.openstreetmap.org/copyright" license="http://opendatacommons.org/licenses/odbl/1-0/">
+ <relation id="9676366" visible="true" version="54" changeset="190053177" timestamp="2026-10-05T18:36:15Z" user="zlyntud" uid="13281003">
+  <member type="node" ref="2518148509" role="admin_centre"/>
+  <member type="way" ref="696202835" role="outer"/>
+  <member type="way" ref="1484983167" role="outer"/>
+  <member type="way" ref="1564513389" role="outer"/>
+  <member type="way" ref="1565265404" role="outer"/>
+  <member type="way" ref="1564962754" role="outer"/>
+  <member type="way" ref="1029380116" role="outer"/>
+  <member type="way" ref="1028665856" role="outer"/>
+  <member type="way" ref="696202836" role="outer"/>
+  <member type="way" ref="696202837" role="outer"/>
+  <member type="way" ref="696202841" role="outer"/>
+  <member type="way" ref="696202840" role="outer"/>
+  <member type="way" ref="696202838" role="outer"/>
+  <member type="way" ref="851564754" role="outer"/>
+  <member type="way" ref="696202861" role="outer"/>
+  <member type="way" ref="851582249" role="outer"/>
+  <member type="way" ref="933633839" role="outer"/>
+  <member type="way" ref="696202857" role="outer"/>
+  <member type="way" ref="851614285" role="outer"/>
+  <member type="way" ref="851619118" role="outer"/>
+  <member type="way" ref="851627571" role="outer"/>
+  <member type="way" ref="851619117" role="outer"/>
+  <member type="way" ref="851619116" role="outer"/>
+  <member type="way" ref="851634425" role="outer"/>
+  <member type="way" ref="851641881" role="outer"/>
+  <member type="way" ref="851648679" role="outer"/>
+  <member type="way" ref="851977173" role="outer"/>
+  <member type="way" ref="851977172" role="outer"/>
+  <member type="way" ref="851977168" role="outer"/>
+  <member type="way" ref="851983478" role="outer"/>
+  <member type="way" ref="851988155" role="outer"/>
+  <member type="way" ref="851983472" role="outer"/>
+  <member type="way" ref="852005153" role="outer"/>
+  <member type="way" ref="852009075" role="outer"/>
+  <member type="way" ref="852009080" role="outer"/>
+  <member type="way" ref="852782591" role="outer"/>
+  <member type="way" ref="852788891" role="outer"/>
+  <member type="way" ref="852957726" role="outer"/>
+  <member type="way" ref="852979107" role="outer"/>
+  <member type="way" ref="852978290" role="outer"/>
+  <member type="way" ref="852978291" role="outer"/>
+  <member type="way" ref="852978288" role="outer"/>
+  <member type="way" ref="852978287" role="outer"/>
+  <member type="way" ref="696202854" role="outer"/>
+  <member type="way" ref="852143347" role="outer"/>
+  <member type="way" ref="852143348" role="outer"/>
+  <member type="way" ref="852143346" role="outer"/>
+  <member type="way" ref="852143343" role="outer"/>
+  <member type="way" ref="852978293" role="outer"/>
+  <member type="way" ref="852143341" role="outer"/>
+  <member type="way" ref="852143340" role="outer"/>
+  <member type="way" ref="853284078" role="outer"/>
+  <member type="way" ref="853304949" role="outer"/>
+  <member type="way" ref="853304944" role="outer"/>
+  <member type="way" ref="853396610" role="outer"/>
+  <member type="way" ref="852143337" role="outer"/>
+  <member type="way" ref="853378600" role="outer"/>
+  <member type="way" ref="852143336" role="outer"/>
+  <member type="way" ref="852152792" role="outer"/>
+  <member type="way" ref="852152787" role="outer"/>
+  <member type="way" ref="852152784" role="outer"/>
+  <member type="way" ref="852152778" role="outer"/>
+  <member type="way" ref="852152777" role="outer"/>
+  <member type="way" ref="852152773" role="outer"/>
+  <member type="way" ref="852152765" role="outer"/>
+  <member type="way" ref="852152770" role="outer"/>
+  <member type="way" ref="852152766" role="outer"/>
+  <member type="way" ref="852152767" role="outer"/>
+  <member type="way" ref="696202843" role="outer"/>
+  <member type="way" ref="1248305733" role="outer"/>
+  <member type="way" ref="1248305734" role="outer"/>
+  <member type="way" ref="1282934959" role="outer"/>
+  <member type="way" ref="696202842" role="outer"/>
+  <member type="way" ref="1493638483" role="outer"/>
+  <member type="way" ref="1493465518" role="outer"/>
+  <member type="way" ref="1493118720" role="outer"/>
+  <member type="way" ref="1493068865" role="outer"/>
+  <member type="way" ref="1493068036" role="outer"/>
+  <member type="way" ref="1493068035" role="outer"/>
+  <member type="way" ref="975462561" role="outer"/>
+  <member type="way" ref="1028665857" role="outer"/>
+  <tag k="admin_level" v="5"/>
+  <tag k="boundary" v="administrative"/>
+  <tag k="name" v="Lamongan"/>
+  <tag k="name:ar" v="لامونقان"/>
+  <tag k="official_name" v="Kabupaten Lamongan"/>
+  <tag k="type" v="boundary"/>
+  <tag k="wikidata" v="Q11086"/>
+  <tag k="wikipedia" v="id:Kabupaten Lamongan"/>
+ </relation>
+</osm>

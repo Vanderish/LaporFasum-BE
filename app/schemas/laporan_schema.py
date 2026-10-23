@@ -7,7 +7,7 @@ class LaporanCreate(BaseModel):
     deskripsi: str
     latitude: float
     longitude: float
-    id_kategori: int
+    id_kategori: Optional[int] = None
     id_kecamatan_kejadian: Optional[int] = None
 
 class LaporanUpdateStatus(BaseModel):
@@ -24,7 +24,7 @@ class LaporanResponse(BaseModel):
     longitude: float
     status_terkini: str
     kewenangan_penanganan: Optional[str]
-    id_kategori: int
+    id_kategori: Optional[int] = None
     id_kecamatan_kejadian: int
     id_user: int
     created_at: datetime

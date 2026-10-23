@@ -53,7 +53,7 @@ def login_user(identifier: str, password: str):
     cursor = db.cursor(dictionary=True)
     
     try:
-        cursor.execute("SELECT id_user, email, password, nama_lengkap, alamat_domisili, id_role, id_kecamatan, id_kabupaten FROM users WHERE email = %s OR nik = %s", (identifier, identifier))
+        cursor.execute("SELECT id_user, nik, email, password, nama_lengkap, alamat_domisili, id_role, id_kecamatan, id_kabupaten FROM users WHERE email = %s OR nik = %s", (identifier, identifier))
         user_dict = cursor.fetchone()
     finally:
         cursor.close()
@@ -77,6 +77,7 @@ def login_user(identifier: str, password: str):
     access_token = create_access_token(
         data={
             "id_user": user_dict["id_user"],
+            "nik": user_dict["nik"],
             "email": user_dict["email"],
             "nama_lengkap": user_dict["nama_lengkap"],
             "alamat_domisili": user_dict["alamat_domisili"],
@@ -103,3 +104,30 @@ def get_kecamatan_list():
         db.close()
     
     return kecamatan_list
+
+
+def get_user_laporan_stats(id_user: int):
+    db = get_db_connection()
+    if not db:
+        raise HTTPException(status_code=500, detail="Koneksi database gagal")
+    
+    cursor = db.cursor(dictionary=True)
+    
+    try:
+        query = """
+            SELECT 
+                COUNT(id_laporan) AS total_laporan_user,
+                SUM(CASE WHEN status_terkini = 'Selesai' THEN 1 ELSE 0 END) AS laporan_user_selesai
+            FROM laporan 
+            WHERE id_pelapor = %s
+        """
+        cursor.execute(query, (id_user,))
+        result = cursor.fetchone()
+        
+        return {
+            "total_laporan_user": int(result["total_laporan_user"] or 0) if result else 0,
+            "laporan_user_selesai": int(result["laporan_user_selesai"] or 0) if result else 0
+        }
+    finally:
+        cursor.close()
+        db.close()

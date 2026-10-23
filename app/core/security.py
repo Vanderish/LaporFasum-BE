@@ -1,8 +1,9 @@
 import os
+import hashlib
 from datetime import datetime, timedelta, timezone
 from jose import JWTError, jwt
-from passlib.context import CryptContext
 from dotenv import load_dotenv
+import bcrypt
 
 load_dotenv()
 
@@ -19,16 +20,24 @@ def get_secret_by_role(id_role: int) -> str:
         return ADMIN_KAB_SECRET
     else:
         raise ValueError("Invalid role ID")
+
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_DAYS = 3
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
 def verify_password(plain_password, hashed_password):
-    return pwd_context.verify(plain_password, hashed_password)
+    if isinstance(hashed_password, str):
+        hashed_password = hashed_password.encode('utf-8')
+    if isinstance(plain_password, str):
+        plain_password = plain_password.encode('utf-8')
+    plain_password = plain_password[:72]
+    return bcrypt.checkpw(plain_password, hashed_password)
 
 def get_password_hash(password):
-    return pwd_context.hash(password)
+    if isinstance(password, str):
+        password = password.encode('utf-8')
+    password = password[:72]
+    salt = bcrypt.gensalt(rounds=12)
+    return bcrypt.hashpw(password, salt).decode('utf-8')
 
 def create_access_token(data: dict, expires_delta: timedelta | None = None):
     to_encode = data.copy()

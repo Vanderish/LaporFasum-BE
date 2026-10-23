@@ -1,16 +1,22 @@
-from fastapi import HTTPException, UploadFile, File, Form
+from fastapi import HTTPException, UploadFile, File, Form, BackgroundTasks
 from app.core.database import get_db_connection
 from app.core.security import get_password_hash
+from app.services.ai_service import klasifikasi_dan_teruskan_laporan
 import cloudinary.uploader
 from typing import Optional, List
 import os
+import logging
+
+logger = logging.getLogger(__name__)
+
+MAX_FILE_SIZE = 10 * 1024 * 1024
 
 def create_laporan(
+    background_tasks: BackgroundTasks,
     judul_laporan: str = Form(...),
     deskripsi: str = Form(...),
     latitude: float = Form(...),
     longitude: float = Form(...),
-    id_kategori: int = Form(...),
     id_kecamatan_kejadian: Optional[int] = Form(None),
     foto_bukti: UploadFile = File(...),
     current_user: dict = None
@@ -20,32 +26,69 @@ def create_laporan(
         raise HTTPException(status_code=500, detail="Koneksi database gagal")
         
     cursor = db.cursor(dictionary=True)
-    
+
     try:
-        # Upload foto ke Cloudinary
-        upload_result = cloudinary.uploader.upload(foto_bukti.file, folder="laporan_fasilitas")
+        # Validasi file size
+        foto_bukti.file.seek(0, 2)
+        file_size = foto_bukti.file.tell()
+        foto_bukti.file.seek(0)
+        
+        if file_size > MAX_FILE_SIZE:
+            raise HTTPException(status_code=413, detail=f"Ukuran file terlalu besar. Maksimal {MAX_FILE_SIZE // (1024*1024)}MB")
+        
+        # Validasi content type
+        allowed_types = ["image/jpeg", "image/png", "image/webp", "image/heic", "image/heif"]
+        if foto_bukti.content_type not in allowed_types:
+            raise HTTPException(status_code=400, detail="Format file tidak didukung. Gunakan JPG, PNG, WEBP, atau HEIC")
+        
+        logger.info(f"Uploading foto for laporan: {judul_laporan}, size: {file_size} bytes, type: {foto_bukti.content_type}")
+        
+        # Upload foto ke Cloudinary dengan timeout dan auto-convert HEIC
+        upload_result = cloudinary.uploader.upload(
+            foto_bukti.file, 
+            folder="laporan_fasilitas",
+            timeout=60,
+            resource_type="image",
+            format="jpg",
+            quality="auto:good"
+        )
         foto_url = upload_result.get("secure_url")
+        
+        if not foto_url:
+            raise HTTPException(status_code=500, detail="Gagal upload foto ke Cloudinary")
+        
+        logger.info(f"Foto uploaded successfully: {foto_url}")
         
         id_user = current_user.get("id_user")
         if not id_kecamatan_kejadian:
             id_kecamatan_kejadian = current_user.get("id_kecamatan")
         
         cursor.execute("""
-            INSERT INTO laporan (judul_laporan, deskripsi, foto_bukti, latitude, longitude, status_terkini, id_kategori, id_kecamatan_kejadian, id_user)
-            VALUES (%s, %s, %s, %s, %s, 'Menunggu Verifikasi', %s, %s, %s)
-        """, (judul_laporan, deskripsi, foto_url, latitude, longitude, id_kategori, id_kecamatan_kejadian, id_user))
+            INSERT INTO laporan (judul_laporan, deskripsi_laporan, foto_bukti, latitude, longitude, status_terkini, id_kategori, id_kecamatan_kejadian, id_pelapor)
+            VALUES (%s, %s, %s, %s, %s, 'Menunggu Verifikasi', NULL, %s, %s)
+        """, (judul_laporan, deskripsi, foto_url, latitude, longitude, id_kecamatan_kejadian, id_user))
         db.commit()
         
         id_laporan = cursor.lastrowid
-        
+        id_kecamatan = id_kecamatan_kejadian
+
         # Insert ke riwayat_status_laporan
         cursor.execute("""
-            INSERT INTO riwayat_status_laporan (id_laporan, status_sebelum, status_sesudah, kewenangan_penanganan, tanggapan_admin)
-            VALUES (%s, '', 'Menunggu Verifikasi', '', 'Laporan baru dibuat')
-        """, (id_laporan,))
+            INSERT INTO riwayat_status_laporan (id_laporan, id_admin_pemroses, status_update, tanggapan_admin)
+            VALUES (%s, %s, 'Menunggu Verifikasi', 'Laporan baru dibuat')
+        """, (id_laporan, id_user))
         db.commit()
-        
-        return {"message": "Laporan berhasil dibuat", "id_laporan": id_laporan}
+
+        background_tasks.add_task(
+            klasifikasi_dan_teruskan_laporan,
+            id_laporan=id_laporan,
+            judul=judul_laporan,
+            deskripsi=deskripsi,
+            foto_url=foto_url,
+            id_kecamatan=id_kecamatan
+        )
+
+        return {"message": "Laporan berhasil disubmit", "id_laporan": id_laporan, "id_kategori": None, "status": "Menunggu Verifikasi"}
     finally:
         cursor.close()
         db.close()
@@ -72,7 +115,7 @@ def get_laporan_list(
         query = """
             SELECT l.*, k.nama_kategori, kec.nama_kecamatan
             FROM laporan l
-            JOIN kategori_fasilitas k ON l.id_kategori = k.id_kategori
+            LEFT JOIN kategori_fasilitas k ON l.id_kategori = k.id_kategori
             JOIN kecamatan kec ON l.id_kecamatan_kejadian = kec.id_kecamatan
             WHERE 1=1
         """
@@ -96,7 +139,7 @@ def get_laporan_list(
             params.append(kategori)
         
         if search:
-            query += " AND (l.judul_laporan LIKE %s OR l.deskripsi LIKE %s)"
+            query += " AND (l.judul_laporan LIKE %s OR l.deskripsi_laporan LIKE %s)"
             params.extend([f"%{search}%", f"%{search}%"])
         
         count_query = query.replace("SELECT l.*, k.nama_kategori, kec.nama_kecamatan", "SELECT COUNT(*) as total")
@@ -123,7 +166,11 @@ def get_laporan_list(
         cursor.close()
         db.close()
 
-def get_laporan_saya(current_user: dict):
+def get_laporan_saya(
+    current_user: dict,
+    page: int = 1,
+    limit: int = 10
+):
     db = get_db_connection()
     if not db:
         raise HTTPException(status_code=500, detail="Koneksi database gagal")
@@ -132,18 +179,38 @@ def get_laporan_saya(current_user: dict):
     
     try:
         id_user = current_user.get("id_user")
+        offset = (page - 1) * limit
         
         query = """
             SELECT l.*, k.nama_kategori, kec.nama_kecamatan
             FROM laporan l
-            JOIN kategori_fasilitas k ON l.id_kategori = k.id_kategori
+            LEFT JOIN kategori_fasilitas k ON l.id_kategori = k.id_kategori
             JOIN kecamatan kec ON l.id_kecamatan_kejadian = kec.id_kecamatan
             WHERE l.id_pelapor = %s
             ORDER BY l.created_at DESC
+            LIMIT %s OFFSET %s
         """
-        cursor.execute(query, (id_user,))
+        cursor.execute(query, (id_user, limit, offset))
         laporan_list = cursor.fetchall()
-        return {"data": laporan_list}
+        
+        # Get count for pagination
+        count_query = """
+            SELECT COUNT(*) as total
+            FROM laporan
+            WHERE id_pelapor = %s
+        """
+        cursor.execute(count_query, (id_user,))
+        total = cursor.fetchone()["total"]
+        
+        return {
+            "data": laporan_list,
+            "pagination": {
+                "page": page,
+                "limit": limit,
+                "total": total,
+                "total_pages": (total + limit - 1) // limit
+            }
+        }
     finally:
         cursor.close()
         db.close()
@@ -159,7 +226,7 @@ def get_laporan_by_id(id_laporan: int, current_user: dict):
         query = """
             SELECT l.*, k.nama_kategori, kec.nama_kecamatan, u.nama_lengkap
             FROM laporan l
-            JOIN kategori_fasilitas k ON l.id_kategori = k.id_kategori
+            LEFT JOIN kategori_fasilitas k ON l.id_kategori = k.id_kategori
             JOIN kecamatan kec ON l.id_kecamatan_kejadian = kec.id_kecamatan
             JOIN users u ON l.id_pelapor = u.id_user
             WHERE l.id_laporan = %s

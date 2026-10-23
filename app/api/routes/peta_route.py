@@ -25,3 +25,14 @@ def get_titik_laporan(
     current_user: dict = Depends(get_current_user)
 ):
     return peta_controller.get_titik_laporan(page=page, limit=limit)
+
+
+@router.get("/fasilitas-umum")
+def get_fasilitas_umum(
+    kategori: str = Query(None, description="Filter by kategori fasilitas"),
+    kepemilikan: str = Query(None, description="Filter by kepemilikan: Desa, Kecamatan, Kabupaten, Provinsi, Nasional"),
+    page: int = Query(1, ge=1, description="Page number"),
+    limit: int = Query(100, ge=1, le=200, description="Items per page"),
+    current_user: dict = Depends(get_current_user)
+):
+    return peta_controller.get_fasilitas_umum(kategori=kategori, kepemilikan=kepemilikan, page=page, limit=limit)

@@ -10,7 +10,7 @@ GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
 client = genai.Client(api_key=GEMINI_API_KEY) if GEMINI_API_KEY else None
 
-MODEL_NAME = "gemini-3.8-flash"
+MODEL_NAME = "gemini-3.1-flash-lite"
 
 DEFAULT_KATEGORI_ID = 16
 

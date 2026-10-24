@@ -113,10 +113,11 @@ def get_laporan_list(
         id_user = current_user.get("id_user")
         
         query = """
-            SELECT l.*, k.nama_kategori, kec.nama_kecamatan
+            SELECT l.*, k.nama_kategori, kec.nama_kecamatan, u.nama_lengkap
             FROM laporan l
             LEFT JOIN kategori_fasilitas k ON l.id_kategori = k.id_kategori
             JOIN kecamatan kec ON l.id_kecamatan_kejadian = kec.id_kecamatan
+            JOIN users u ON l.id_pelapor = u.id_user
             WHERE 1=1
         """
         params = []
@@ -142,7 +143,7 @@ def get_laporan_list(
             query += " AND (l.judul_laporan LIKE %s OR l.deskripsi_laporan LIKE %s)"
             params.extend([f"%{search}%", f"%{search}%"])
         
-        count_query = query.replace("SELECT l.*, k.nama_kategori, kec.nama_kecamatan", "SELECT COUNT(*) as total")
+        count_query = query.replace("SELECT l.*, k.nama_kategori, kec.nama_kecamatan, u.nama_lengkap", "SELECT COUNT(*) as total")
         cursor.execute(count_query, tuple(params))
         total = cursor.fetchone()["total"]
         

@@ -139,7 +139,7 @@ CREATE TABLE `kategori_fasilitas` (
   `id_kategori` int(11) NOT NULL AUTO_INCREMENT,
   `nama_kategori` varchar(100) NOT NULL,
   PRIMARY KEY (`id_kategori`)
-) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -171,7 +171,7 @@ DROP TABLE IF EXISTS `laporan`;
 CREATE TABLE `laporan` (
   `id_laporan` int(11) NOT NULL AUTO_INCREMENT,
   `id_pelapor` int(11) NOT NULL,
-  `id_kategori` int(11) NOT NULL,
+  `id_kategori` int(11) DEFAULT NULL,
   `id_fasilitas_umum` int(11) DEFAULT NULL,
   `id_kecamatan_kejadian` int(11) NOT NULL,
   `judul_laporan` varchar(200) NOT NULL,
@@ -191,7 +191,7 @@ CREATE TABLE `laporan` (
   CONSTRAINT `laporan_ibfk_2` FOREIGN KEY (`id_kategori`) REFERENCES `kategori_fasilitas` (`id_kategori`) ON UPDATE CASCADE,
   CONSTRAINT `laporan_ibfk_3` FOREIGN KEY (`id_fasilitas_umum`) REFERENCES `fasilitas_umum` (`id_fasilitas_umum`) ON DELETE SET NULL ON UPDATE CASCADE,
   CONSTRAINT `laporan_ibfk_4` FOREIGN KEY (`id_kecamatan_kejadian`) REFERENCES `kecamatan` (`id_kecamatan`) ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=20 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -237,7 +237,7 @@ CREATE TABLE `riwayat_status_laporan` (
   KEY `id_admin_pemroses` (`id_admin_pemroses`),
   CONSTRAINT `riwayat_status_laporan_ibfk_1` FOREIGN KEY (`id_laporan`) REFERENCES `laporan` (`id_laporan`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `riwayat_status_laporan_ibfk_2` FOREIGN KEY (`id_admin_pemroses`) REFERENCES `users` (`id_user`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -280,7 +280,7 @@ CREATE TABLE `users` (
   CONSTRAINT `users_ibfk_1` FOREIGN KEY (`id_role`) REFERENCES `roles` (`id_role`) ON UPDATE CASCADE,
   CONSTRAINT `users_ibfk_2` FOREIGN KEY (`id_kecamatan`) REFERENCES `kecamatan` (`id_kecamatan`) ON DELETE SET NULL ON UPDATE CASCADE,
   CONSTRAINT `users_ibfk_3` FOREIGN KEY (`id_kabupaten`) REFERENCES `kabupaten` (`id_kabupaten`) ON DELETE SET NULL ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
@@ -292,4 +292,4 @@ CREATE TABLE `users` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-10-07 17:01:01
+-- Dump completed on 2026-10-26 19:38:20

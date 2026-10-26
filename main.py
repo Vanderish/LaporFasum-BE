@@ -17,7 +17,9 @@ load_dotenv()
 app = FastAPI(title="Sistem Pelaporan Fasilitas Umum")
 
 # CORS Configuration
-origins = [
+# Origin tambahan bisa diisi lewat env ALLOWED_ORIGINS (dipisah koma), contoh:
+# ALLOWED_ORIGINS=https://frontend-saya.up.railway.app,https://domain-produksi.com
+default_origins = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
     "http://localhost:5173",
@@ -26,6 +28,14 @@ origins = [
     "capacitor://localhost",
     "https://98rp1d00-8000.asse.devtunnels.ms",
 ]
+
+extra_origins = [
+    origin.strip()
+    for origin in os.getenv("ALLOWED_ORIGINS", "").split(",")
+    if origin.strip()
+]
+
+origins = list(dict.fromkeys(default_origins + extra_origins))
 
 app.add_middleware(
     CORSMiddleware,
@@ -53,3 +63,7 @@ app.include_router(peta_route.router)
 @app.get("/")
 def root():
     return {"message": "API Aktif! Buka /docs untuk dokumentasi Swagger UI"}
+
+@app.get("/health")
+def health():
+    return {"status": "ok"}

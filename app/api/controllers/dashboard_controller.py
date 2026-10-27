@@ -100,37 +100,86 @@ def get_dashboard_admin(current_user: dict):
     cursor = db.cursor(dictionary=True)
     
     try:
-        # 1. Statistik Status (semua laporan)
-        query_status = """
+        id_role = current_user.get("id_role")
+        id_kecamatan = current_user.get("id_kecamatan")
+        
+        # Filter kecamatan: Admin Kecamatan hanya lihat wilayahnya, Admin Kabupaten lihat semua
+        where_kecamatan = ""
+        params = []
+        if id_role == 2 and id_kecamatan:
+            where_kecamatan = "WHERE id_kecamatan_kejadian = %s"
+            params.append(id_kecamatan)
+        
+        # 1. Statistik Status (filter kecamatan jika admin kecamatan)
+        query_status = f"""
             SELECT 
                 SUM(CASE WHEN status_terkini = 'Menunggu Verifikasi' THEN 1 ELSE 0 END) AS menunggu,
                 SUM(CASE WHEN status_terkini = 'Diterima' THEN 1 ELSE 0 END) AS diterima,
+                SUM(CASE WHEN status_terkini = 'Ditolak' THEN 1 ELSE 0 END) AS ditolak,
+                SUM(CASE WHEN status_terkini = 'Diproses' THEN 1 ELSE 0 END) AS diproses,
                 SUM(CASE WHEN status_terkini = 'Selesai' THEN 1 ELSE 0 END) AS selesai
             FROM laporan
+            {where_kecamatan}
         """
-        cursor.execute(query_status)
+        cursor.execute(query_status, tuple(params))
         status_result = cursor.fetchone()
         
         statistik_status = {
             "menunggu": int(status_result["menunggu"] or 0) if status_result else 0,
             "diterima": int(status_result["diterima"] or 0) if status_result else 0,
+            "ditolak": int(status_result["ditolak"] or 0) if status_result else 0,
+            "diproses": int(status_result["diproses"] or 0) if status_result else 0,
             "selesai": int(status_result["selesai"] or 0) if status_result else 0
         }
         
         # 2. Rekapitulasi Kerusakan Terbanyak Berdasarkan Kategori
-        query_kategori = """
+        query_kategori = f"""
             SELECT k.nama_kategori, COUNT(l.id_laporan) AS jumlah_laporan
             FROM laporan l
             LEFT JOIN kategori_fasilitas k ON l.id_kategori = k.id_kategori
+            {where_kecamatan}
             GROUP BY k.id_kategori, k.nama_kategori
             ORDER BY jumlah_laporan DESC
         """
-        cursor.execute(query_kategori)
+        cursor.execute(query_kategori, tuple(params))
         rekapitulasi_kategori = cursor.fetchall()
+        
+        # 3. Statistik Mingguan (4 minggu terakhir) - filter kecamatan
+        query_mingguan = """
+            SELECT 
+                YEARWEEK(created_at, 1) AS minggu,
+                DATE_FORMAT(MIN(created_at), '%d %b') AS minggu_awal,
+                DATE_FORMAT(MAX(created_at), '%d %b') AS minggu_akhir,
+                COUNT(id_laporan) AS jumlah
+            FROM laporan
+            {where_kecamatan}
+            {where_and} created_at >= DATE_SUB(CURDATE(), INTERVAL 3 WEEK)
+            GROUP BY YEARWEEK(created_at, 1)
+            ORDER BY minggu
+        """.format(where_kecamatan=where_kecamatan, where_and='AND' if where_kecamatan else 'WHERE')
+        cursor.execute(query_mingguan, tuple(params))
+        statistik_mingguan = cursor.fetchall()
+        
+        # 4. Statistik Bulanan (6 bulan terakhir) - filter kecamatan
+        query_bulanan = """
+            SELECT 
+                DATE_FORMAT(created_at, '%Y-%m') AS bulan,
+                DATE_FORMAT(created_at, '%M %Y') AS nama_bulan,
+                COUNT(id_laporan) AS jumlah
+            FROM laporan
+            {where_kecamatan}
+            {where_and} created_at >= DATE_SUB(CURDATE(), INTERVAL 5 MONTH)
+            GROUP BY DATE_FORMAT(created_at, '%Y-%m'), DATE_FORMAT(created_at, '%M %Y')
+            ORDER BY bulan
+        """.format(where_kecamatan=where_kecamatan, where_and='AND' if where_kecamatan else 'WHERE')
+        cursor.execute(query_bulanan, tuple(params))
+        statistik_bulanan = cursor.fetchall()
         
         return {
             "statistik_status": statistik_status,
-            "rekapitulasi_kategori": rekapitulasi_kategori
+            "rekapitulasi_kategori": rekapitulasi_kategori,
+            "statistik_mingguan": statistik_mingguan,
+            "statistik_bulanan": statistik_bulanan
         }
     finally:
         cursor.close()

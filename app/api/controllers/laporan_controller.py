@@ -278,14 +278,16 @@ def update_laporan_status(id_laporan: int, status_terkini: str, kewenangan_penan
         if kewenangan_penanganan not in valid_kewenangan:
             raise HTTPException(status_code=400, detail="Kewenangan penanganan tidak valid")
         
-        # Ambil status lama
-        cursor.execute("SELECT status_terkini FROM laporan WHERE id_laporan = %s", (id_laporan,))
+        # Ambil status lama + data pelapor
+        cursor.execute("SELECT status_terkini, id_pelapor, judul_laporan FROM laporan WHERE id_laporan = %s", (id_laporan,))
         laporan = cursor.fetchone()
         
         if not laporan:
             raise HTTPException(status_code=404, detail="Laporan tidak ditemukan")
         
         status_lama = laporan["status_terkini"]
+        id_pelapor = laporan["id_pelapor"]
+        judul_laporan = laporan["judul_laporan"]
         
         # Update laporan
         cursor.execute("""
@@ -299,6 +301,23 @@ def update_laporan_status(id_laporan: int, status_terkini: str, kewenangan_penan
             INSERT INTO riwayat_status_laporan (id_laporan, id_admin_pemroses, status_update, tanggapan_admin)
             VALUES (%s, %s, %s, %s)
         """, (id_laporan, current_user.get("id_user"), status_terkini, tanggapan_admin or f"Status diubah dari {status_lama} ke {status_terkini}"))
+        
+        # Kirim notifikasi ke pelapor saat status Diterima / Ditolak
+        if status_terkini in ["Diterima", "Ditolak"]:
+            if status_terkini == "Diterima":
+                judul_notif = "Laporan Diterima"
+                pesan_notif = f"Laporan '{judul_laporan}' telah diverifikasi dan diterima."
+                if tanggapan_admin:
+                    pesan_notif += f" Catatan admin: {tanggapan_admin}"
+            else:
+                judul_notif = "Laporan Ditolak"
+                alasan = tanggapan_admin or "Tidak ada alasan yang diberikan."
+                pesan_notif = f"Laporan '{judul_laporan}' ditolak. Alasan: {alasan}"
+            
+            cursor.execute("""
+                INSERT INTO notifikasi (id_user, id_laporan, judul, pesan, tipe_notifikasi)
+                VALUES (%s, %s, %s, %s, 'status_laporan')
+            """, (id_pelapor, id_laporan, judul_notif, pesan_notif))
         
         db.commit()
         return {"message": "Status laporan berhasil diperbarui"}

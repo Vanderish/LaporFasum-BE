@@ -12,6 +12,8 @@ class DashboardWargaResponse(BaseModel):
 class DashboardAdminResponse(BaseModel):
     statistik_status: dict
     rekapitulasi_kategori: List[dict]
+    statistik_mingguan: List[dict]
+    statistik_bulanan: List[dict]
 
 class HeatmapResponse(BaseModel):
     latitude: List[float]

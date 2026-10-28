@@ -66,7 +66,7 @@ def get_laporan_by_id(id_laporan: int, current_user: dict = Depends(get_current_
 def update_laporan_status(
     id_laporan: int,
     status_terkini: str = Form(...),
-    kewenangan_penanganan: str = Form(...),
+    kewenangan_penanganan: Optional[str] = Form(None),
     tanggapan_admin: str = Form(None),
     current_user: dict = Depends(get_current_admin_role)
 ):

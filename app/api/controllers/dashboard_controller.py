@@ -144,12 +144,33 @@ def get_dashboard_admin(current_user: dict):
         cursor.execute(query_kategori, tuple(params))
         rekapitulasi_kategori = cursor.fetchall()
         
-        # 3. Statistik Mingguan (4 minggu terakhir) - filter kecamatan
+        # 3. Statistik Harian (7 hari terakhir) - format label Sen, Sel, Rab, Kam, Jum, Sab, Min
+        hari_labels = ["Min", "Sen", "Sel", "Rab", "Kam", "Jum", "Sab"]
+        query_harian = f"""
+            SELECT 
+                DAYOFWEEK(created_at) AS hari_ke,  -- 1=Min, 2=Sen, ..., 7=Sab
+                COUNT(id_laporan) AS jumlah
+            FROM laporan
+            {where_kecamatan}
+            {'AND' if where_kecamatan else 'WHERE'} created_at >= DATE_SUB(CURDATE(), INTERVAL 6 DAY)
+            GROUP BY DAYOFWEEK(created_at)
+            ORDER BY hari_ke
+        """
+        cursor.execute(query_harian, tuple(params))
+        harian_raw = {row["hari_ke"]: row["jumlah"] for row in cursor.fetchall()}
+        
+        statistik_harian = []
+        for i in range(1, 8):  # 1=Min to 7=Sab
+            label_idx = (i - 1) % 7  # Adjust to match hari_labels array
+            statistik_harian.append({
+                "label": hari_labels[label_idx],
+                "value": int(harian_raw.get(i, 0))
+            })
+        
+        # 4. Statistik Mingguan (4 minggu terakhir) - format label Minggu 1, 2, 3, 4
         query_mingguan = """
             SELECT 
                 YEARWEEK(created_at, 1) AS minggu,
-                DATE_FORMAT(MIN(created_at), '%d %b') AS minggu_awal,
-                DATE_FORMAT(MAX(created_at), '%d %b') AS minggu_akhir,
                 COUNT(id_laporan) AS jumlah
             FROM laporan
             {where_kecamatan}
@@ -158,28 +179,25 @@ def get_dashboard_admin(current_user: dict):
             ORDER BY minggu
         """.format(where_kecamatan=where_kecamatan, where_and='AND' if where_kecamatan else 'WHERE')
         cursor.execute(query_mingguan, tuple(params))
-        statistik_mingguan = cursor.fetchall()
+        mingguan_raw = cursor.fetchall()
         
-        # 4. Statistik Bulanan (6 bulan terakhir) - filter kecamatan
-        query_bulanan = """
-            SELECT 
-                DATE_FORMAT(created_at, '%Y-%m') AS bulan,
-                DATE_FORMAT(created_at, '%M %Y') AS nama_bulan,
-                COUNT(id_laporan) AS jumlah
-            FROM laporan
-            {where_kecamatan}
-            {where_and} created_at >= DATE_SUB(CURDATE(), INTERVAL 5 MONTH)
-            GROUP BY DATE_FORMAT(created_at, '%Y-%m'), DATE_FORMAT(created_at, '%M %Y')
-            ORDER BY bulan
-        """.format(where_kecamatan=where_kecamatan, where_and='AND' if where_kecamatan else 'WHERE')
-        cursor.execute(query_bulanan, tuple(params))
-        statistik_bulanan = cursor.fetchall()
+        statistik_bulanan = []
+        for idx, row in enumerate(mingguan_raw):
+            statistik_bulanan.append({
+                "label": f"Minggu {idx + 1}",
+                "value": int(row["jumlah"] or 0)
+            })
+        
+        # Ensure exactly 4 weeks
+        while len(statistik_bulanan) < 4:
+            statistik_bulanan.append({"label": f"Minggu {len(statistik_bulanan) + 1}", "value": 0})
         
         return {
-            "statistik_status": statistik_status,
-            "rekapitulasi_kategori": rekapitulasi_kategori,
-            "statistik_mingguan": statistik_mingguan,
-            "statistik_bulanan": statistik_bulanan
+            "status": "success",
+            "data": {
+                "statistik_harian": statistik_harian,
+                "statistik_bulanan": statistik_bulanan
+            }
         }
     finally:
         cursor.close()

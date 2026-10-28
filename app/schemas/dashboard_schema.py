@@ -10,10 +10,8 @@ class DashboardWargaResponse(BaseModel):
     laporan_terbaru: List[dict]
 
 class DashboardAdminResponse(BaseModel):
-    statistik_status: dict
-    rekapitulasi_kategori: List[dict]
-    statistik_mingguan: List[dict]
-    statistik_bulanan: List[dict]
+    status: str
+    data: dict
 
 class HeatmapResponse(BaseModel):
     latitude: List[float]

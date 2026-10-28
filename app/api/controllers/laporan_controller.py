@@ -255,7 +255,7 @@ def get_laporan_by_id(id_laporan: int, current_user: dict):
         cursor.close()
         db.close()
 
-def update_laporan_status(id_laporan: int, status_terkini: str, kewenangan_penanganan: str, tanggapan_admin: Optional[str] = None, current_user: dict = None):
+def update_laporan_status(id_laporan: int, status_terkini: str, kewenangan_penanganan: Optional[str] = None, tanggapan_admin: Optional[str] = None, current_user: dict = None):
     db = get_db_connection()
     if not db:
         raise HTTPException(status_code=500, detail="Koneksi database gagal")
@@ -273,10 +273,12 @@ def update_laporan_status(id_laporan: int, status_terkini: str, kewenangan_penan
         if status_terkini not in valid_status:
             raise HTTPException(status_code=400, detail="Status tidak valid")
         
-        # Validasi kewenangan
-        valid_kewenangan = ["Kecamatan", "Kabupaten"]
-        if kewenangan_penanganan not in valid_kewenangan:
-            raise HTTPException(status_code=400, detail="Kewenangan penanganan tidak valid")
+        # Validasi kewenangan dari table instansi_kewenangan (tingkat_kewenangan)
+        if kewenangan_penanganan is not None:
+            cursor.execute("SELECT tingkat_kewenangan FROM instansi_kewenangan")
+            valid_kewenangan = [row["tingkat_kewenangan"] for row in cursor.fetchall()]
+            if kewenangan_penanganan not in valid_kewenangan:
+                raise HTTPException(status_code=400, detail=f"Kewenangan penanganan tidak valid. Pilihan: {', '.join(valid_kewenangan)}")
         
         # Ambil status lama + data pelapor
         cursor.execute("SELECT status_terkini, id_pelapor, judul_laporan FROM laporan WHERE id_laporan = %s", (id_laporan,))

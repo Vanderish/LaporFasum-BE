@@ -57,11 +57,11 @@ def get_dashboard_warga(current_user: dict):
         
         # 6c. Statistik Bulanan (6 bulan terakhir)
         query_bulanan = """
-            SELECT DATE_FORMAT(created_at, '%%Y-%%m') AS bulan, COUNT(id_laporan) AS jumlah
+            SELECT DATE_FORMAT(created_at, '%Y-%m') AS bulan, COUNT(id_laporan) AS jumlah
             FROM laporan
             WHERE id_kecamatan_kejadian = %s
               AND created_at >= DATE_SUB(CURDATE(), INTERVAL 5 MONTH)
-            GROUP BY DATE_FORMAT(created_at, '%%Y-%%m')
+            GROUP BY DATE_FORMAT(created_at, '%Y-%m')
             ORDER BY bulan
         """
         cursor.execute(query_bulanan, (id_kecamatan,))

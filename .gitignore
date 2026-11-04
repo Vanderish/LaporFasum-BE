@@ -42,6 +42,8 @@ fetch_fasilitas_umum.py
 fetch_jalan_nasional_provinsi.py
 migrate_railway_to_tidb.py
 seed.sql
+seed_tidb.py
+seed_geo_tidb.py
 test_connection.py
 
 # Documentation (not needed in repo)

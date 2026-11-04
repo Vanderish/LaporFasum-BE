@@ -38,3 +38,11 @@ def get_fasilitas_umum(
 @router.get("/fasilitas-umum/{id_fasilitas}/rute")
 def get_rute_fasilitas(id_fasilitas: int, current_user: dict = Depends(get_current_user)):
     return master_controller.get_rute_fasilitas(id_fasilitas)
+
+@router.get("/notifikasi")
+def get_notifikasi(
+    page: int = Query(1, ge=1, description="Page number"),
+    limit: int = Query(10, ge=1, le=100, description="Items per page"),
+    current_user: dict = Depends(get_current_user)
+):
+    return master_controller.get_notifikasi(current_user, page, limit)

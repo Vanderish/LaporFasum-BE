@@ -106,7 +106,7 @@ def get_dashboard_admin(current_user: dict):
         # Filter kecamatan: Admin Kecamatan hanya lihat wilayahnya, Admin Kabupaten lihat semua
         where_kecamatan = ""
         params = []
-        if id_role == 2 and id_kecamatan:
+        if id_role == 2 or id_role == 3 and id_kecamatan:
             where_kecamatan = "WHERE id_kecamatan_kejadian = %s"
             params.append(id_kecamatan)
         

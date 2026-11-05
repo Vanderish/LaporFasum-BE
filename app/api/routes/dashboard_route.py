@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, Query
 from app.schemas.dashboard_schema import DashboardWargaResponse, DashboardAdminResponse, HeatmapResponse
 from app.api.controllers import dashboard_controller
-from app.api.deps import get_current_user, get_current_admin_kecamatan_role
+from app.api.deps import get_current_user, get_current_admin_kecamatan_role, get_current_admin_role
 
 router = APIRouter(prefix="/dashboard", tags=["Dashboard & SIG"])
 
@@ -10,7 +10,7 @@ def dashboard_warga(current_user: dict = Depends(get_current_user)):
     return dashboard_controller.get_dashboard_warga(current_user)
 
 @router.get("/admin", response_model=DashboardAdminResponse)
-def dashboard_admin(current_user: dict = Depends(get_current_admin_kecamatan_role)):
+def dashboard_admin(current_user: dict = Depends(get_current_admin_role)):
     return dashboard_controller.get_dashboard_admin(current_user)
 
 @router.get("/heatmap", response_model=HeatmapResponse)

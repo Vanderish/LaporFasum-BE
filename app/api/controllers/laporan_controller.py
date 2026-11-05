@@ -128,7 +128,9 @@ def get_laporan_list(
         elif id_role == 2:
             query += " AND l.id_kecamatan_kejadian = %s"
             params.append(id_kecamatan)
-        elif id_role not in [2, 3]:
+        elif id_role == 3:
+            pass
+        else:
             raise HTTPException(status_code=403, detail="Akses ditolak")
         
         if status:

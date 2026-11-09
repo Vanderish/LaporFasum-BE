@@ -13,6 +13,14 @@ def dashboard_warga(current_user: dict = Depends(get_current_user)):
 def dashboard_admin(current_user: dict = Depends(get_current_admin_role)):
     return dashboard_controller.get_dashboard_admin(current_user)
 
+@router.get("/user/statistik")
+def dashboard_user_statistik(current_user: dict = Depends(get_current_user)):
+    return dashboard_controller.get_dashboard_warga(current_user)
+
+@router.get("/admin/statistik")
+def dashboard_admin_statistik(current_user: dict = Depends(get_current_admin_role)):
+    return dashboard_controller.get_dashboard_admin(current_user)
+
 @router.get("/heatmap", response_model=HeatmapResponse)
 def get_heatmap(current_user: dict = Depends(get_current_user)):
     return dashboard_controller.get_heatmap_data()

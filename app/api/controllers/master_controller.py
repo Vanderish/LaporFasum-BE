@@ -223,6 +223,7 @@ def get_rute_fasilitas(id_fasilitas: int):
         db.close()
 
 def get_jalan_by_status(status: str, page: int = 1, limit: int = 20):
+    import json
     db = get_db_connection()
     if not db:
         raise HTTPException(status_code=500, detail="Koneksi database gagal")
@@ -230,21 +231,60 @@ def get_jalan_by_status(status: str, page: int = 1, limit: int = 20):
     cursor = db.cursor(dictionary=True)
     
     try:
-        count_query = "SELECT COUNT(*) as total FROM jalan WHERE status_kepemilikan = %s"
+        count_query = """
+            SELECT COUNT(DISTINCT j.id_jalan) as total 
+            FROM jalan j
+            WHERE j.status_kepemilikan = %s
+        """
         cursor.execute(count_query, (status,))
         total = cursor.fetchone()["total"]
         
         offset = (page - 1) * limit
         query = """
-            SELECT id_jalan, nama_jalan, id_kabupaten, id_kategori, status_kepemilikan, 
-                   latitude, longitude, detail
-            FROM jalan
-            WHERE status_kepemilikan = %s
-            ORDER BY nama_jalan
+            SELECT DISTINCT j.id_jalan, j.nama_jalan, j.id_kabupaten, j.id_kategori, 
+                   j.status_kepemilikan, j.detail
+            FROM jalan j
+            WHERE j.status_kepemilikan = %s
+            ORDER BY j.nama_jalan
             LIMIT %s OFFSET %s
         """
         cursor.execute(query, (status, limit, offset))
-        jalan_list = cursor.fetchall()
+        jalan_raw = cursor.fetchall()
+        
+        jalan_list = []
+        for row in jalan_raw:
+            id_jalan = row["id_jalan"]
+            
+            koordinat = []
+            coord_query = """
+                SELECT COALESCE(djn.koordinat_lintasan, dfj.koordinat_lintasan) as koordinat_lintasan
+                FROM jalan j
+                LEFT JOIN detail_jalan_nasional djn ON j.id_jalan = djn.id_jalan
+                LEFT JOIN detail_fungsi_jalan dfj ON j.id_jalan = dfj.id_jalan
+                WHERE j.id_jalan = %s
+                LIMIT 1
+            """
+            cursor.execute(coord_query, (id_jalan,))
+            coord_result = cursor.fetchone()
+            
+            if coord_result and coord_result.get('koordinat_lintasan'):
+                try:
+                    coords = json.loads(coord_result['koordinat_lintasan'])
+                    for coord in coords:
+                        if len(coord) >= 2:
+                            koordinat.append({"latitude": coord[1], "longitude": coord[0]})
+                except:
+                    pass
+            
+            jalan_list.append({
+                "id_jalan": row["id_jalan"],
+                "nama_jalan": row["nama_jalan"],
+                "id_kabupaten": row["id_kabupaten"],
+                "id_kategori": row["id_kategori"],
+                "status_kepemilikan": row["status_kepemilikan"],
+                "detail": row["detail"],
+                "koordinat": koordinat
+            })
         
         return {
             "data": jalan_list,

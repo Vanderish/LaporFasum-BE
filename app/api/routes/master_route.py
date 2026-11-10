@@ -46,3 +46,35 @@ def get_notifikasi(
     current_user: dict = Depends(get_current_user)
 ):
     return master_controller.get_notifikasi(current_user, page, limit)
+
+@router.get("/jalan/nasional")
+def get_jalan_nasional(
+    page: int = Query(1, ge=1, description="Page number"),
+    limit: int = Query(20, ge=1, le=100, description="Items per page"),
+    current_user: dict = Depends(get_current_user)
+):
+    return master_controller.get_jalan_nasional(page, limit)
+
+@router.get("/jalan/provinsi")
+def get_jalan_provinsi(
+    page: int = Query(1, ge=1, description="Page number"),
+    limit: int = Query(20, ge=1, le=100, description="Items per page"),
+    current_user: dict = Depends(get_current_user)
+):
+    return master_controller.get_jalan_provinsi(page, limit)
+
+@router.get("/jalan/kecamatan")
+def get_jalan_kecamatan(
+    page: int = Query(1, ge=1, description="Page number"),
+    limit: int = Query(20, ge=1, le=100, description="Items per page"),
+    current_user: dict = Depends(get_current_user)
+):
+    return master_controller.get_jalan_kecamatan(page, limit)
+
+@router.get("/jalan/kabupaten")
+def get_jalan_kabupaten(
+    page: int = Query(1, ge=1, description="Page number"),
+    limit: int = Query(20, ge=1, le=100, description="Items per page"),
+    current_user: dict = Depends(get_current_user)
+):
+    return master_controller.get_jalan_kabupaten(page, limit)

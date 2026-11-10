@@ -221,3 +221,52 @@ def get_rute_fasilitas(id_fasilitas: int):
     finally:
         cursor.close()
         db.close()
+
+def get_jalan_by_status(status: str, page: int = 1, limit: int = 20):
+    db = get_db_connection()
+    if not db:
+        raise HTTPException(status_code=500, detail="Koneksi database gagal")
+    
+    cursor = db.cursor(dictionary=True)
+    
+    try:
+        count_query = "SELECT COUNT(*) as total FROM jalan WHERE status_kepemilikan = %s"
+        cursor.execute(count_query, (status,))
+        total = cursor.fetchone()["total"]
+        
+        offset = (page - 1) * limit
+        query = """
+            SELECT id_jalan, nama_jalan, id_kabupaten, id_kategori, status_kepemilikan, 
+                   latitude, longitude, detail
+            FROM jalan
+            WHERE status_kepemilikan = %s
+            ORDER BY nama_jalan
+            LIMIT %s OFFSET %s
+        """
+        cursor.execute(query, (status, limit, offset))
+        jalan_list = cursor.fetchall()
+        
+        return {
+            "data": jalan_list,
+            "pagination": {
+                "page": page,
+                "limit": limit,
+                "total": total,
+                "total_pages": (total + limit - 1) // limit
+            }
+        }
+    finally:
+        cursor.close()
+        db.close()
+
+def get_jalan_nasional(page: int = 1, limit: int = 20):
+    return get_jalan_by_status("Nasional", page, limit)
+
+def get_jalan_provinsi(page: int = 1, limit: int = 20):
+    return get_jalan_by_status("Provinsi", page, limit)
+
+def get_jalan_kecamatan(page: int = 1, limit: int = 20):
+    return get_jalan_by_status("Kecamatan", page, limit)
+
+def get_jalan_kabupaten(page: int = 1, limit: int = 20):
+    return get_jalan_by_status("Kabupaten", page, limit)

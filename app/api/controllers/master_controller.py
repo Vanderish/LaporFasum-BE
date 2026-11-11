@@ -310,3 +310,93 @@ def get_jalan_kecamatan(page: int = 1, limit: int = 20):
 
 def get_jalan_kabupaten(page: int = 1, limit: int = 20):
     return get_jalan_by_status("Kabupaten", page, limit)
+
+def get_jalan_by_kategori(kategori: str, page: int = 1, limit: int = 20):
+    import json
+    db = get_db_connection()
+    if not db:
+        raise HTTPException(status_code=500, detail="Koneksi database gagal")
+    
+    cursor = db.cursor(dictionary=True)
+    
+    try:
+        count_query = "SELECT COUNT(*) as total FROM jalan_v2 WHERE kategori_jalan = %s"
+        cursor.execute(count_query, (kategori,))
+        total = cursor.fetchone()["total"]
+        
+        offset = (page - 1) * limit
+        query = """
+            SELECT id_jalan, nama_jalan, kategori_jalan, status_kepemilikan, 
+                   koordinat_lintasan
+            FROM jalan_v2
+            WHERE kategori_jalan = %s
+            ORDER BY nama_jalan
+            LIMIT %s OFFSET %s
+        """
+        cursor.execute(query, (kategori, limit, offset))
+        jalan_raw = cursor.fetchall()
+        
+        jalan_list = []
+        for row in jalan_raw:
+            koordinat = []
+            if row.get('koordinat_lintasan'):
+                try:
+                    coords = json.loads(row['koordinat_lintasan'])
+                    for coord in coords:
+                        if len(coord) >= 2:
+                            koordinat.append({"latitude": coord[1], "longitude": coord[0]})
+                except:
+                    pass
+            
+            jalan_list.append({
+                "id_jalan": row["id_jalan"],
+                "nama_jalan": row["nama_jalan"],
+                "status_kepemilikan": row["status_kepemilikan"],
+                "koordinat": koordinat
+            })
+        
+        return {
+            "data": jalan_list,
+            "pagination": {
+                "page": page,
+                "limit": limit,
+                "total": total,
+                "total_pages": (total + limit - 1) // limit
+            }
+        }
+    finally:
+        cursor.close()
+        db.close()
+
+def get_jalan_arteri_primer(page: int = 1, limit: int = 20):
+    return get_jalan_by_kategori("arteri-primer", page, limit)
+
+def get_jalan_kolektor_primer_1(page: int = 1, limit: int = 20):
+    return get_jalan_by_kategori("kolektor-primer-1", page, limit)
+
+def get_jalan_kolektor_primer_2(page: int = 1, limit: int = 20):
+    return get_jalan_by_kategori("kolektor-primer-2", page, limit)
+
+def get_jalan_kolektor_primer_3(page: int = 1, limit: int = 20):
+    return get_jalan_by_kategori("kolektor-primer-3", page, limit)
+
+def get_jalan_arteri_sekunder(page: int = 1, limit: int = 20):
+    return get_jalan_by_kategori("arteri-sekunder", page, limit)
+
+def get_jalan_kolektor_primer_4(page: int = 1, limit: int = 20):
+    return get_jalan_by_kategori("kolektor-primer-4", page, limit)
+
+def get_jalan_kolektor_sekunder(page: int = 1, limit: int = 20):
+    return get_jalan_by_kategori("kolektor-sekunder", page, limit)
+
+def get_jalan_lingkungan_primer(page: int = 1, limit: int = 20):
+    return get_jalan_by_kategori("lingkungan-primer", page, limit)
+
+def get_jalan_lingkungan_sekunder(page: int = 1, limit: int = 20):
+    return get_jalan_by_kategori("lingkungan-sekunder", page, limit)
+
+def get_jalan_lokal_primer(page: int = 1, limit: int = 20):
+    return get_jalan_by_kategori("lokal-primer", page, limit)
+
+def get_jalan_lokal_sekunder(page: int = 1, limit: int = 20):
+    return get_jalan_by_kategori("lokal-sekunder", page, limit)

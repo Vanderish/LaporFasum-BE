@@ -78,3 +78,91 @@ def get_jalan_kabupaten(
     current_user: dict = Depends(get_current_user)
 ):
     return master_controller.get_jalan_kabupaten(page, limit)
+
+@router.get("/jalan/arteri-primer")
+def get_jalan_arteri_primer(
+    page: int = Query(1, ge=1, description="Page number"),
+    limit: int = Query(20, ge=1, le=100, description="Items per page"),
+    current_user: dict = Depends(get_current_user)
+):
+    return master_controller.get_jalan_arteri_primer(page, limit)
+
+@router.get("/jalan/kolektor-primer-1")
+def get_jalan_kolektor_primer_1(
+    page: int = Query(1, ge=1, description="Page number"),
+    limit: int = Query(20, ge=1, le=100, description="Items per page"),
+    current_user: dict = Depends(get_current_user)
+):
+    return master_controller.get_jalan_kolektor_primer_1(page, limit)
+
+@router.get("/jalan/kolektor-primer-2")
+def get_jalan_kolektor_primer_2(
+    page: int = Query(1, ge=1, description="Page number"),
+    limit: int = Query(20, ge=1, le=100, description="Items per page"),
+    current_user: dict = Depends(get_current_user)
+):
+    return master_controller.get_jalan_kolektor_primer_2(page, limit)
+
+@router.get("/jalan/kolektor-primer-3")
+def get_jalan_kolektor_primer_3(
+    page: int = Query(1, ge=1, description="Page number"),
+    limit: int = Query(20, ge=1, le=100, description="Items per page"),
+    current_user: dict = Depends(get_current_user)
+):
+    return master_controller.get_jalan_kolektor_primer_3(page, limit)
+
+@router.get("/jalan/arteri-sekunder")
+def get_jalan_arteri_sekunder(
+    page: int = Query(1, ge=1, description="Page number"),
+    limit: int = Query(20, ge=1, le=100, description="Items per page"),
+    current_user: dict = Depends(get_current_user)
+):
+    return master_controller.get_jalan_arteri_sekunder(page, limit)
+
+@router.get("/jalan/kolektor-primer-4")
+def get_jalan_kolektor_primer_4(
+    page: int = Query(1, ge=1, description="Page number"),
+    limit: int = Query(20, ge=1, le=100, description="Items per page"),
+    current_user: dict = Depends(get_current_user)
+):
+    return master_controller.get_jalan_kolektor_primer_4(page, limit)
+
+@router.get("/jalan/kolektor-sekunder")
+def get_jalan_kolektor_sekunder(
+    page: int = Query(1, ge=1, description="Page number"),
+    limit: int = Query(20, ge=1, le=100, description="Items per page"),
+    current_user: dict = Depends(get_current_user)
+):
+    return master_controller.get_jalan_kolektor_sekunder(page, limit)
+
+@router.get("/jalan/lingkungan-primer")
+def get_jalan_lingkungan_primer(
+    page: int = Query(1, ge=1, description="Page number"),
+    limit: int = Query(20, ge=1, le=100, description="Items per page"),
+    current_user: dict = Depends(get_current_user)
+):
+    return master_controller.get_jalan_lingkungan_primer(page, limit)
+
+@router.get("/jalan/lingkungan-sekunder")
+def get_jalan_lingkungan_sekunder(
+    page: int = Query(1, ge=1, description="Page number"),
+    limit: int = Query(20, ge=1, le=100, description="Items per page"),
+    current_user: dict = Depends(get_current_user)
+):
+    return master_controller.get_jalan_lingkungan_sekunder(page, limit)
+
+@router.get("/jalan/lokal-primer")
+def get_jalan_lokal_primer(
+    page: int = Query(1, ge=1, description="Page number"),
+    limit: int = Query(20, ge=1, le=100, description="Items per page"),
+    current_user: dict = Depends(get_current_user)
+):
+    return master_controller.get_jalan_lokal_primer(page, limit)
+
+@router.get("/jalan/lokal-sekunder")
+def get_jalan_lokal_sekunder(
+    page: int = Query(1, ge=1, description="Page number"),
+    limit: int = Query(20, ge=1, le=100, description="Items per page"),
+    current_user: dict = Depends(get_current_user)
+):
+    return master_controller.get_jalan_lokal_sekunder(page, limit)

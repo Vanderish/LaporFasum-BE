@@ -44,7 +44,11 @@ migrate_railway_to_tidb.py
 seed.sql
 seed_tidb.py
 seed_geo_tidb.py
+seed_jalan_v2.py
 test_connection.py
+
+# Migrations (local only)
+migrations/
 
 # Documentation (not needed in repo)
 RENDER_DEPLOYMENT.md

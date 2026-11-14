@@ -275,12 +275,13 @@ def update_laporan_status(id_laporan: int, status_terkini: str, kewenangan_penan
         if status_terkini not in valid_status:
             raise HTTPException(status_code=400, detail="Status tidak valid")
         
-        # Validasi kewenangan dari table instansi_kewenangan (tingkat_kewenangan)
-        if kewenangan_penanganan is not None:
+        if kewenangan_penanganan and kewenangan_penanganan.strip():
             cursor.execute("SELECT tingkat_kewenangan FROM instansi_kewenangan")
             valid_kewenangan = [row["tingkat_kewenangan"] for row in cursor.fetchall()]
             if kewenangan_penanganan not in valid_kewenangan:
                 raise HTTPException(status_code=400, detail=f"Kewenangan penanganan tidak valid. Pilihan: {', '.join(valid_kewenangan)}")
+        else:
+            kewenangan_penanganan = None
         
         # Ambil status lama + data pelapor
         cursor.execute("SELECT status_terkini, id_pelapor, judul_laporan FROM laporan WHERE id_laporan = %s", (id_laporan,))
@@ -292,6 +293,25 @@ def update_laporan_status(id_laporan: int, status_terkini: str, kewenangan_penan
         status_lama = laporan["status_terkini"]
         id_pelapor = laporan["id_pelapor"]
         judul_laporan = laporan["judul_laporan"]
+        
+        STATUS_ORDER = ["Menunggu Verifikasi", "Diterima", "Diproses", "Selesai"]
+        idx_lama = STATUS_ORDER.index(status_lama) if status_lama in STATUS_ORDER else -1
+        idx_baru = STATUS_ORDER.index(status_terkini) if status_terkini in STATUS_ORDER else -1
+        
+        if status_terkini == "Ditolak":
+            if status_lama != "Menunggu Verifikasi":
+                raise HTTPException(status_code=400, detail="Hanya bisa menolak dari status 'Menunggu Verifikasi'")
+        elif idx_baru != -1 and idx_lama != -1:
+            if idx_baru <= idx_lama:
+                raise HTTPException(status_code=400, detail=f"Tidak bisa mundur dari '{status_lama}' ke '{status_terkini}'")
+            if status_lama == "Menunggu Verifikasi" and status_terkini in ["Diterima", "Ditolak"]:
+                pass
+            elif status_lama == "Diterima" and status_terkini in ["Diproses", "Selesai"]:
+                pass
+            elif status_lama == "Diproses" and status_terkini == "Selesai":
+                pass
+            else:
+                raise HTTPException(status_code=400, detail=f"Transisi tidak valid dari '{status_lama}' ke '{status_terkini}'. Urutan: Menunggu Verifikasi → Diterima → (Diproses) → Selesai")
         
         # Update laporan
         cursor.execute("""

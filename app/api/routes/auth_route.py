@@ -76,3 +76,7 @@ def get_current_user_profile(current_user: dict = Depends(get_current_user)):
 @router.post("/verify-reset")
 def verify_reset(email: str = Form(...), nik: str = Form(...)):
     return auth_controller.verify_reset_password(email=email, nik=nik)
+
+@router.post("/reset-password")
+def reset_password(nik: str = Form(...), email: str = Form(...), new_password: str = Form(...)):
+    return auth_controller.reset_password(nik=nik, email=email, new_password=new_password)

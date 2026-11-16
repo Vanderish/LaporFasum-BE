@@ -150,3 +150,27 @@ def verify_reset_password(email: str, nik: str):
     finally:
         cursor.close()
         db.close()
+
+def reset_password(nik: str, email: str, new_password: str):
+    db = get_db_connection()
+    if not db:
+        raise HTTPException(status_code=500, detail="Koneksi database gagal")
+    
+    cursor = db.cursor(dictionary=True)
+    
+    try:
+        cursor.execute("SELECT id_user FROM users WHERE email = %s AND nik = %s", (email, nik))
+        user = cursor.fetchone()
+        
+        if not user:
+            raise HTTPException(status_code=404, detail="Email dan NIK tidak cocok")
+        
+        password_hash = get_password_hash(new_password)
+        
+        cursor.execute("UPDATE users SET password = %s WHERE id_user = %s", (password_hash, user["id_user"]))
+        db.commit()
+        
+        return {"message": "Password berhasil direset"}
+    finally:
+        cursor.close()
+        db.close()

@@ -131,3 +131,22 @@ def get_user_laporan_stats(id_user: int):
     finally:
         cursor.close()
         db.close()
+
+def verify_reset_password(email: str, nik: str):
+    db = get_db_connection()
+    if not db:
+        raise HTTPException(status_code=500, detail="Koneksi database gagal")
+    
+    cursor = db.cursor(dictionary=True)
+    
+    try:
+        cursor.execute("SELECT id_user FROM users WHERE email = %s AND nik = %s", (email, nik))
+        user = cursor.fetchone()
+        
+        if not user:
+            raise HTTPException(status_code=404, detail="Email dan NIK tidak cocok")
+        
+        return {"id_user": user["id_user"], "message": "Verifikasi berhasil"}
+    finally:
+        cursor.close()
+        db.close()

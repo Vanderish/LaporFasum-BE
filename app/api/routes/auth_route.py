@@ -72,3 +72,7 @@ def get_current_user_profile(current_user: dict = Depends(get_current_user)):
         "id_kabupaten": current_user.get("id_kabupaten"),
         "statistik_laporan": stats
     }
+
+@router.post("/verify-reset")
+def verify_reset(email: str = Form(...), nik: str = Form(...)):
+    return auth_controller.verify_reset_password(email=email, nik=nik)

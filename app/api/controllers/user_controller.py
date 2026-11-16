@@ -1,7 +1,8 @@
-from fastapi import HTTPException
+from fastapi import HTTPException, UploadFile
 from app.core.database import get_db_connection
 from app.core.security import get_password_hash, verify_password
 from typing import Optional
+import cloudinary.uploader
 
 DICEBEAR_URL = "https://api.dicebear.com/7.x/avataaars/svg?seed={}"
 
@@ -79,11 +80,36 @@ def update_profile(
         cursor.close()
         db.close()
 
-def update_foto_profile(current_user: dict, foto_profile: Optional[str] = None):
+def update_foto_profile(current_user: dict, foto_profile: Optional[UploadFile] = None):
     db = get_db_connection()
     if not db:
         raise HTTPException(status_code=500, detail="Koneksi database gagal")
+    
+    # Validate file if provided
+    if foto_profile:
+        allowed_types = ["image/jpeg", "image/png", "image/webp", "image/heic", "image/heif"]
+        if foto_profile.content_type not in allowed_types:
+            raise HTTPException(status_code=400, detail="Format file tidak didukung. Gunakan JPG, PNG, WEBP, atau HEIC")
         
+        # Upload ke Cloudinary
+        try:
+            upload_result = cloudinary.uploader.upload(
+                foto_profile.file,
+                folder="profile_photos",
+                timeout=60,
+                resource_type="image",
+                format="jpg",
+                quality="auto:good"
+            )
+            foto_url = upload_result.get("secure_url")
+            
+            if not foto_url:
+                raise HTTPException(status_code=500, detail="Gagal upload foto ke Cloudinary")
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Error upload Cloudinary: {str(e)}")
+    else:
+        foto_url = None  # Clear photo - will fallback to DiceBear
+    
     cursor = db.cursor(dictionary=True)
     
     try:
@@ -95,7 +121,7 @@ def update_foto_profile(current_user: dict, foto_profile: Optional[str] = None):
         if not user:
             raise HTTPException(status_code=404, detail="User tidak ditemukan")
         
-        cursor.execute("UPDATE users SET foto_profile = %s WHERE id_user = %s", (foto_profile, id_user))
+        cursor.execute("UPDATE users SET foto_profile = %s WHERE id_user = %s", (foto_url, id_user))
         db.commit()
         
         return get_user_profile(current_user)

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Form
+from fastapi import APIRouter, Depends, Form, File, UploadFile
 from app.api.controllers import user_controller
 from app.api.deps import get_current_user
 from typing import Optional
@@ -23,7 +23,7 @@ def update_profile(
 
 @router.put("/profile/foto")
 def update_foto_profile(
-    foto_profile: Optional[str] = Form(None),
+    foto_profile: UploadFile = File(...),
     current_user: dict = Depends(get_current_user)
 ):
     return user_controller.update_foto_profile(

@@ -161,6 +161,92 @@ def get_fasilitas_umum(nama: Optional[str] = None, kategori: Optional[int] = Non
         cursor.close()
         db.close()
 
+def get_fasilitas_by_kategori(id_kategori: int, page: int = 1, limit: int = 20):
+    db = get_db_connection()
+    if not db:
+        raise HTTPException(status_code=500, detail="Koneksi database gagal")
+        
+    cursor = db.cursor(dictionary=True)
+    
+    try:
+        count_query = """
+            SELECT COUNT(*) as total FROM fasilitas_umum WHERE id_kategori = %s
+        """
+        cursor.execute(count_query, (id_kategori,))
+        total = cursor.fetchone()["total"]
+        
+        offset = (page - 1) * limit
+        query = """
+            SELECT id_fasilitas_umum as id_fasilitas, nama_fasilitas, id_kategori, latitude, longitude 
+            FROM fasilitas_umum 
+            WHERE id_kategori = %s
+            ORDER BY nama_fasilitas
+            LIMIT %s OFFSET %s
+        """
+        cursor.execute(query, (id_kategori, limit, offset))
+        fasilitas_list = cursor.fetchall()
+        
+        return {
+            "data": fasilitas_list,
+            "pagination": {
+                "page": page,
+                "limit": limit,
+                "total": total,
+                "total_pages": (total + limit - 1) // limit
+            }
+        }
+    finally:
+        cursor.close()
+        db.close()
+
+def get_fasilitas_jalan_jembatan(page: int = 1, limit: int = 20):
+    return get_fasilitas_by_kategori(1, page, limit)
+
+def get_fasilitas_pju(page: int = 1, limit: int = 20):
+    return get_fasilitas_by_kategori(2, page, limit)
+
+def get_fasilitas_drainase(page: int = 1, limit: int = 20):
+    return get_fasilitas_by_kategori(3, page, limit)
+
+def get_fasilitas_sampah(page: int = 1, limit: int = 20):
+    return get_fasilitas_by_kategori(4, page, limit)
+
+def get_fasilitas_rth(page: int = 1, limit: int = 20):
+    return get_fasilitas_by_kategori(5, page, limit)
+
+def get_fasilitas_kesehatan(page: int = 1, limit: int = 20):
+    return get_fasilitas_by_kategori(6, page, limit)
+
+def get_fasilitas_pendidikan(page: int = 1, limit: int = 20):
+    return get_fasilitas_by_kategori(7, page, limit)
+
+def get_fasilitas_rambu_marka(page: int = 1, limit: int = 20):
+    return get_fasilitas_by_kategori(8, page, limit)
+
+def get_fasilitas_transportasi(page: int = 1, limit: int = 20):
+    return get_fasilitas_by_kategori(9, page, limit)
+
+def get_fasilitas_olahraga(page: int = 1, limit: int = 20):
+    return get_fasilitas_by_kategori(10, page, limit)
+
+def get_fasilitas_pasar(page: int = 1, limit: int = 20):
+    return get_fasilitas_by_kategori(11, page, limit)
+
+def get_fasilitas_ibadah(page: int = 1, limit: int = 20):
+    return get_fasilitas_by_kategori(12, page, limit)
+
+def get_fasilitas_pemerintahan(page: int = 1, limit: int = 20):
+    return get_fasilitas_by_kategori(13, page, limit)
+
+def get_fasilitas_keamanan(page: int = 1, limit: int = 20):
+    return get_fasilitas_by_kategori(14, page, limit)
+
+def get_fasilitas_perbelanjaan(page: int = 1, limit: int = 20):
+    return get_fasilitas_by_kategori(15, page, limit)
+
+def get_fasilitas_lainnya(page: int = 1, limit: int = 20):
+    return get_fasilitas_by_kategori(16, page, limit)
+
 def get_rute_fasilitas(id_fasilitas: int):
     db = get_db_connection()
     if not db:

@@ -161,11 +161,39 @@ def get_fasilitas_umum(nama: Optional[str] = None, kategori: Optional[int] = Non
         cursor.close()
         db.close()
 
-def get_fasilitas_by_kategori(id_kategori: int, page: int = 1, limit: int = 20):
+KATEGORI_SLUG_MAP = {
+    "jalan-jembatan": 1,
+    "pju": 2,
+    "drainase": 3,
+    "sampah": 4,
+    "rth": 5,
+    "kesehatan": 6,
+    "pendidikan": 7,
+    "rambu-marka": 8,
+    "transportasi": 9,
+    "olahraga": 10,
+    "pasar": 11,
+    "ibadah": 12,
+    "pemerintahan": 13,
+    "keamanan": 14,
+    "perbelanjaan": 15,
+    "lainnya": 16
+}
+
+def get_fasilitas_by_kategori(kategori_val: str, page: int = 1, limit: int = 20):
     db = get_db_connection()
     if not db:
         raise HTTPException(status_code=500, detail="Koneksi database gagal")
         
+    # Resolve ID dari integer string atau slug
+    if str(kategori_val).isdigit():
+        id_kategori = int(kategori_val)
+    else:
+        slug = str(kategori_val).lower().strip()
+        id_kategori = KATEGORI_SLUG_MAP.get(slug)
+        if not id_kategori:
+            raise HTTPException(status_code=400, detail=f"Kategori '{kategori_val}' tidak valid. Pilihan slug: {', '.join(KATEGORI_SLUG_MAP.keys())}")
+            
     cursor = db.cursor(dictionary=True)
     
     try:

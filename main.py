@@ -26,7 +26,10 @@ default_origins = [
     "http://192.168.11.69:5173",
     "http://localhost",
     "capacitor://localhost",
+    "cap://localhost",
+    "file://",
     "https://98rp1d00-8000.asse.devtunnels.ms",
+    "https://laporfasum.onrender.com",
 ]
 
 extra_origins = [

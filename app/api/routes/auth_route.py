@@ -53,6 +53,10 @@ def register_admin_kabupaten():
 def login(login_data: UserLogin):
     return auth_controller.login_user(identifier=login_data.identifier, password=login_data.password)
 
+@router.post("/login-admin", response_model=Token)
+def login_admin(login_data: UserLogin):
+    return auth_controller.login_admin(identifier=login_data.identifier, password=login_data.password)
+
 @router.get("/kecamatan")
 def get_kecamatan():
     return auth_controller.get_kecamatan_list()

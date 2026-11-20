@@ -89,6 +89,57 @@ def login_user(identifier: str, password: str):
     
     return {"access_token": access_token, "token_type": "bearer"}
 
+def login_admin(identifier: str, password: str):
+    db = get_db_connection()
+    if not db:
+        raise HTTPException(status_code=500, detail="Koneksi database gagal")
+        
+    cursor = db.cursor(dictionary=True)
+    
+    try:
+        cursor.execute("SELECT id_user, nik, email, password, nama_lengkap, alamat_domisili, id_role, id_kecamatan, id_kabupaten FROM users WHERE email = %s OR nik = %s", (identifier, identifier))
+        user_dict = cursor.fetchone()
+    finally:
+        cursor.close()
+        db.close()
+    
+    if not user_dict:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Kredensial tidak valid",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+        
+    if not verify_password(password, user_dict["password"]):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Kredensial tidak valid",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
+    # Validate role - only admin kecamatan (2) or admin kabupaten (3)
+    if user_dict["id_role"] not in [2, 3]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Akses ditolak: Hanya admin yang bisa login di sini"
+        )
+    
+    access_token_expires = timedelta(days=ACCESS_TOKEN_EXPIRE_DAYS)
+    access_token = create_access_token(
+        data={
+            "id_user": user_dict["id_user"],
+            "nik": user_dict["nik"],
+            "email": user_dict["email"],
+            "nama_lengkap": user_dict["nama_lengkap"],
+            "alamat_domisili": user_dict["alamat_domisili"],
+            "id_role": user_dict["id_role"],
+            "id_kecamatan": user_dict["id_kecamatan"],
+            "id_kabupaten": user_dict["id_kabupaten"]
+        }, expires_delta=access_token_expires
+    )
+    
+    return {"access_token": access_token, "token_type": "bearer"}
+
 def get_kecamatan_list():
     db = get_db_connection()
     if not db:

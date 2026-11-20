@@ -20,9 +20,7 @@ app = FastAPI(title="Sistem Pelaporan Fasilitas Umum")
 # Origin tambahan bisa diisi lewat env ALLOWED_ORIGINS (dipisah koma), contoh:
 # ALLOWED_ORIGINS=https://frontend-saya.up.railway.app,https://domain-produksi.com
 default_origins = [
-    "http://localhost:5173",
-    "http://192.168.11.69:5173",
-    "http://localhost",
+    "https://localhost",
     "capacitor://localhost",
     "https://laporfasum.onrender.com",
 ]

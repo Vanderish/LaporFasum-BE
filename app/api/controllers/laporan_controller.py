@@ -129,11 +129,18 @@ def get_laporan_list(
             query += " AND l.id_kecamatan_kejadian = %s"
             params.append(id_kecamatan)
         elif id_role == 3:
-            pass
+            # Admin kabupaten hanya lihat laporan "Diterima" (sudah diverifikasi kecamatan)
+            query += " AND l.status_terkini = %s"
+            params.append("Diterima")
         else:
             raise HTTPException(status_code=403, detail="Akses ditolak")
         
+        # Optional status filter (override default for role 3 if explicitly provided)
         if status:
+            # Remove the auto-added status filter for role 3 if user specifies different
+            if id_role == 3:
+                query = query.replace(" AND l.status_terkini = %s", "", 1)
+                params.remove("Diterima")
             query += " AND l.status_terkini = %s"
             params.append(status)
         
@@ -267,8 +274,22 @@ def update_laporan_status(id_laporan: int, status_terkini: str, kewenangan_penan
     try:
         # Validasi role admin
         id_role = current_user.get("id_role")
+        id_kecamatan = current_user.get("id_kecamatan")
+        
         if id_role not in [2, 3]:
             raise HTTPException(status_code=403, detail="Hanya admin yang bisa mengubah status")
+        
+        # Validasi pemilik laporan (role 2 hanya liat kecamatan sendiri)
+        cursor.execute("SELECT status_terkini, id_pelapor, judul_laporan, id_kecamatan_kejadian FROM laporan WHERE id_laporan = %s", (id_laporan,))
+        laporan = cursor.fetchone()
+        
+        if not laporan:
+            raise HTTPException(status_code=404, detail="Laporan tidak ditemukan")
+        
+        # Role 2 (admin kecamatan) hanya boleh update laporan di kecamatan dia
+        if id_role == 2:
+            if laporan["id_kecamatan_kejadian"] != id_kecamatan:
+                raise HTTPException(status_code=403, detail="Akses ditolak: Laporan tidak di wilayah Anda")
         
         # Validasi status
         valid_status = ["Menunggu Verifikasi", "Diterima", "Ditolak", "Diproses", "Selesai"]
@@ -283,35 +304,33 @@ def update_laporan_status(id_laporan: int, status_terkini: str, kewenangan_penan
         else:
             kewenangan_penanganan = None
         
-        # Ambil status lama + data pelapor
-        cursor.execute("SELECT status_terkini, id_pelapor, judul_laporan FROM laporan WHERE id_laporan = %s", (id_laporan,))
-        laporan = cursor.fetchone()
-        
-        if not laporan:
-            raise HTTPException(status_code=404, detail="Laporan tidak ditemukan")
-        
+        # Ambil data laporan (sudah di-fetch di atas untuk validasi akses)
         status_lama = laporan["status_terkini"]
         id_pelapor = laporan["id_pelapor"]
         judul_laporan = laporan["judul_laporan"]
         
-        STATUS_ORDER = ["Menunggu Verifikasi", "Diterima", "Diproses", "Selesai"]
-        idx_lama = STATUS_ORDER.index(status_lama) if status_lama in STATUS_ORDER else -1
-        idx_baru = STATUS_ORDER.index(status_terkini) if status_terkini in STATUS_ORDER else -1
-        
+        # Validasi transisi status berdasarkan role
+        # Admin Kecamatan (role 2): hanya "Menunggu Verifikasi" → "Diterima"/"Ditolak"
+        # Admin Kabupaten (role 3): "Diterima" → "Diproses"/"Selesai", "Diproses" → "Selesai"
         if status_terkini == "Ditolak":
             if status_lama != "Menunggu Verifikasi":
                 raise HTTPException(status_code=400, detail="Hanya bisa menolak dari status 'Menunggu Verifikasi'")
-        elif idx_baru != -1 and idx_lama != -1:
-            if idx_baru <= idx_lama:
-                raise HTTPException(status_code=400, detail=f"Tidak bisa mundur dari '{status_lama}' ke '{status_terkini}'")
+        
+        if id_role == 2:  # Admin Kecamatan
+            # Hanya boleh: Menunggu Verifikasi → Diterima/Ditolak
             if status_lama == "Menunggu Verifikasi" and status_terkini in ["Diterima", "Ditolak"]:
                 pass
-            elif status_lama == "Diterima" and status_terkini in ["Diproses", "Selesai"]:
+            else:
+                raise HTTPException(status_code=400, detail="Admin Kecamatan hanya bisa verifikasi: Menunggu Verifikasi → Diterima/Ditolak")
+        
+        elif id_role == 3:  # Admin Kabupaten
+            # Boleh: Diterima → Diproses/Selesai, Diproses → Selesai
+            if status_lama == "Diterima" and status_terkini in ["Diproses", "Selesai"]:
                 pass
             elif status_lama == "Diproses" and status_terkini == "Selesai":
                 pass
             else:
-                raise HTTPException(status_code=400, detail=f"Transisi tidak valid dari '{status_lama}' ke '{status_terkini}'. Urutan: Menunggu Verifikasi → Diterima → (Diproses) → Selesai")
+                raise HTTPException(status_code=400, detail="Admin Kabupaten hanya bisa: Diterima → Diproses/Selesai atau Diproses → Selesai")
         
         # Update laporan
         cursor.execute("""

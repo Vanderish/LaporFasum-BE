@@ -264,7 +264,7 @@ def get_laporan_by_id(id_laporan: int, current_user: dict):
         cursor.close()
         db.close()
 
-def update_laporan_status(id_laporan: int, status_terkini: str, kewenangan_penanganan: Optional[str] = None, tanggapan_admin: Optional[str] = None, current_user: dict = None):
+def update_laporan_status(id_laporan: int, status_terkini: str, kewenangan_penanganan: Optional[str] = None, tanggapan_admin: Optional[str] = None, pesan: Optional[str] = None, current_user: dict = None):
     db = get_db_connection()
     if not db:
         raise HTTPException(status_code=500, detail="Koneksi database gagal")
@@ -332,12 +332,12 @@ def update_laporan_status(id_laporan: int, status_terkini: str, kewenangan_penan
             else:
                 raise HTTPException(status_code=400, detail="Admin Kabupaten hanya bisa: Diterima → Diproses/Selesai atau Diproses → Selesai")
         
-        # Update laporan
+# Update laporan
         cursor.execute("""
             UPDATE laporan 
-            SET status_terkini = %s, kewenangan_penanganan = %s
+            SET status_terkini = %s, kewenangan_penanganan = %s, pesan = %s
             WHERE id_laporan = %s
-        """, (status_terkini, kewenangan_penanganan, id_laporan))
+        """, (status_terkini, kewenangan_penanganan, pesan, id_laporan))
         
         # Insert ke riwayat
         cursor.execute("""
@@ -345,8 +345,29 @@ def update_laporan_status(id_laporan: int, status_terkini: str, kewenangan_penan
             VALUES (%s, %s, %s, %s)
         """, (id_laporan, current_user.get("id_user"), status_terkini, tanggapan_admin or f"Status diubah dari {status_lama} ke {status_terkini}"))
         
-        # Kirim notifikasi ke pelapor saat status Diterima / Ditolak
-        if status_terkini in ["Diterima", "Ditolak"]:
+        # Notifikasi logic
+        if status_terkini == "Diterima" and id_role == 2:
+            # Admin kecamatan verifikasi -> notify admin kabupaten
+            cursor.execute("SELECT id_user FROM users WHERE id_role = 3 AND id_kabupaten = 1")
+            admin_kab = cursor.fetchall()
+            for admin in admin_kab:
+                cursor.execute("""
+                    INSERT INTO notifikasi (id_user, id_laporan, judul, pesan, tipe_notifikasi)
+                    VALUES (%s, %s, %s, %s, %s)
+                """, (admin["id_user"], id_laporan, "Laporan Diterima Admin Kecamatan", f"Laporan '{judul_laporan}' telah diverifikasi oleh admin kecamatan.", 'status_laporan'))
+        
+        elif status_terkini == "Selesai" and id_role == 3:
+            # Admin kabupaten selesaikan -> notify pelapor
+            pesan_notif = f"Laporan '{judul_laporan}' telah selesai ditangani."
+            if pesan:
+                pesan_notif += f" Catatan admin: {pesan}"
+            cursor.execute("""
+                INSERT INTO notifikasi (id_user, id_laporan, judul, pesan, tipe_notifikasi)
+                VALUES (%s, %s, %s, %s, %s)
+            """, (id_pelapor, id_laporan, "Laporan Selesai", pesan_notif, 'status_laporan'))
+        
+        elif status_terkini in ["Diterima", "Ditolak"]:
+            # Existing notification to pelapor
             if status_terkini == "Diterima":
                 judul_notif = "Laporan Diterima"
                 pesan_notif = f"Laporan '{judul_laporan}' telah diverifikasi dan diterima."
@@ -359,8 +380,8 @@ def update_laporan_status(id_laporan: int, status_terkini: str, kewenangan_penan
             
             cursor.execute("""
                 INSERT INTO notifikasi (id_user, id_laporan, judul, pesan, tipe_notifikasi)
-                VALUES (%s, %s, %s, %s, 'status_laporan')
-            """, (id_pelapor, id_laporan, judul_notif, pesan_notif))
+                VALUES (%s, %s, %s, %s, %s)
+            """, (id_pelapor, id_laporan, judul_notif, pesan_notif, 'status_laporan'))
         
         db.commit()
         return {"message": "Status laporan berhasil diperbarui"}

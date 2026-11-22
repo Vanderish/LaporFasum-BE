@@ -225,3 +225,50 @@ def reset_password(nik: str, email: str, new_password: str):
     finally:
         cursor.close()
         db.close()
+
+def register_admin_kecamatan(
+    current_user: dict,
+    nik: str,
+    email: str,
+    password: str,
+    nama_lengkap: str,
+    alamat_domisili: str,
+    id_kecamatan: int
+):
+    if current_user.get("id_role") != 3:
+        raise HTTPException(status_code=403, detail="Hanya admin kabupaten yang bisa membuat admin kecamatan")
+    
+    db = get_db_connection()
+    if not db:
+        raise HTTPException(status_code=500, detail="Koneksi database gagal")
+    
+    cursor = db.cursor(dictionary=True)
+    
+    try:
+        # Cek apakah kecamatan sudah punya admin
+        cursor.execute("SELECT id_user FROM users WHERE id_role = 2 AND id_kecamatan = %s", (id_kecamatan,))
+        if cursor.fetchone():
+            raise HTTPException(status_code=400, detail="Kecamatan ini sudah memiliki admin")
+        
+        # Validasi kecamatan ada
+        cursor.execute("SELECT id_kecamatan FROM kecamatan WHERE id_kecamatan = %s", (id_kecamatan,))
+        if not cursor.fetchone():
+            raise HTTPException(status_code=404, detail="Kecamatan tidak ditemukan")
+        
+        # Validasi email/NIK unik
+        cursor.execute("SELECT id_user FROM users WHERE email = %s OR nik = %s", (email, nik))
+        if cursor.fetchone():
+            raise HTTPException(status_code=400, detail="Email atau NIK sudah terdaftar")
+        
+        hashed_password = get_password_hash(password)
+        
+        cursor.execute(
+            "INSERT INTO users (nama_lengkap, nik, email, password, alamat_domisili, id_role, id_kecamatan, id_kabupaten) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
+            (nama_lengkap, nik, email, hashed_password, alamat_domisili, 2, id_kecamatan, 1)
+        )
+        db.commit()
+        
+        return {"message": "Admin kecamatan berhasil dibuat"}
+    finally:
+        cursor.close()
+        db.close()

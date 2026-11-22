@@ -49,6 +49,26 @@ async def register_admin_kecamatan(
 def register_admin_kabupaten():
     raise HTTPException(status_code=403, detail="Pendaftaran Admin Kabupaten murni dari developer, pembuatan manual di database.")
 
+@router.post("/register/admin")
+def register_admin_kecamatan(
+    nik: str = Form(...),
+    email: str = Form(...),
+    password: str = Form(...),
+    nama_lengkap: str = Form(...),
+    alamat_domisili: str = Form(...),
+    id_kecamatan: int = Form(...),
+    current_user: dict = Depends(get_current_admin_kabupaten_role)
+):
+    return auth_controller.register_admin_kecamatan(
+        current_user=current_user,
+        nik=nik,
+        email=email,
+        password=password,
+        nama_lengkap=nama_lengkap,
+        alamat_domisili=alamat_domisili,
+        id_kecamatan=id_kecamatan
+    )
+
 @router.post("/login", response_model=Token)
 def login(login_data: UserLogin):
     return auth_controller.login_user(identifier=login_data.identifier, password=login_data.password)

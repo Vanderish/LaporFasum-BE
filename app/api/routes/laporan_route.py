@@ -68,6 +68,7 @@ def update_laporan_status(
     status_terkini: str = Form(...),
     kewenangan_penanganan: Optional[str] = Form(None),
     tanggapan_admin: str = Form(None),
+    pesan: Optional[str] = Form(None),
     current_user: dict = Depends(get_current_admin_role)
 ):
     return laporan_controller.update_laporan_status(
@@ -75,6 +76,7 @@ def update_laporan_status(
         status_terkini=status_terkini,
         kewenangan_penanganan=kewenangan_penanganan,
         tanggapan_admin=tanggapan_admin,
+        pesan=pesan,
         current_user=current_user
     )
 

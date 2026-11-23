@@ -9,7 +9,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-MAX_FILE_SIZE = 10 * 1024 * 1024
+MAX_FILE_SIZE = 20 * 1024 * 1024
 
 def create_laporan(
     background_tasks: BackgroundTasks,

@@ -71,6 +71,8 @@ async def klasifikasi_dan_teruskan_laporan(
 ):
     if not client:
         print(f"[AI] GEMINI_API_KEY tidak tersedia, skip klasifikasi untuk laporan {id_laporan}")
+        # Still notify admin even if AI unavailable
+        await notify_admin_kecamatan(id_laporan, id_kecamatan, DEFAULT_KATEGORI_ID)
         return
 
     try:
@@ -121,12 +123,15 @@ async def klasifikasi_dan_teruskan_laporan(
     except json.JSONDecodeError as e:
         print(f"[AI] Gagal parse JSON dari Gemini untuk laporan {id_laporan}: {e}")
         await _update_kategori_default(id_laporan)
+        await notify_admin_kecamatan(id_laporan, id_kecamatan, DEFAULT_KATEGORI_ID)
     except httpx.HTTPError as e:
         print(f"[AI] Gagal download gambar untuk laporan {id_laporan}: {e}")
         await _update_kategori_default(id_laporan)
+        await notify_admin_kecamatan(id_laporan, id_kecamatan, DEFAULT_KATEGORI_ID)
     except Exception as e:
         print(f"[AI] Error tak terduga saat klasifikasi laporan {id_laporan}: {e}")
         await _update_kategori_default(id_laporan)
+        await notify_admin_kecamatan(id_laporan, id_kecamatan, DEFAULT_KATEGORI_ID)
 
 
 async def _update_kategori_default(id_laporan: int):

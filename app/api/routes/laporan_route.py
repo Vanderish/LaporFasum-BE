@@ -14,6 +14,7 @@ def create_laporan(
     latitude: float = Form(...),
     longitude: float = Form(...),
     id_kecamatan_kejadian: Optional[int] = Form(None),
+    id_fasilitas_umum: Optional[int] = Form(None),
     foto_bukti: UploadFile = File(...),
     current_user: dict = Depends(get_current_user)
 ):
@@ -24,6 +25,7 @@ def create_laporan(
         latitude=latitude,
         longitude=longitude,
         id_kecamatan_kejadian=id_kecamatan_kejadian,
+        id_fasilitas_umum=id_fasilitas_umum,
         foto_bukti=foto_bukti,
         current_user=current_user
     )

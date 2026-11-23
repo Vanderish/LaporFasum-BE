@@ -514,3 +514,36 @@ def get_jalan_lokal_primer(page: int = 1, limit: int = 20):
 
 def get_jalan_lokal_sekunder(page: int = 1, limit: int = 20):
     return get_jalan_by_kategori("lokal-sekunder", page, limit)
+
+def get_rekomendasi_fasilitas(latitude: float, longitude: float, radius_meter: int = 500, limit: int = 10):
+    db = get_db_connection()
+    if not db:
+        raise HTTPException(status_code=500, detail="Koneksi database gagal")
+    
+    cursor = db.cursor(dictionary=True)
+    
+    try:
+        # Haversine formula for distance calculation in meters
+        query = """
+            SELECT id_fasilitas_umum as id_fasilitas, nama_fasilitas, id_kategori, 
+                   latitude, longitude, status_kepemilikan,
+                   (6371000 * ACOS(
+                       COS(RADIANS(%s)) * COS(RADIANS(latitude)) * COS(RADIANS(longitude) - RADIANS(%s)) +
+                       SIN(RADIANS(%s)) * SIN(RADIANS(latitude))
+                   )) as jarak_meter
+            FROM fasilitas_umum
+            WHERE latitude IS NOT NULL AND longitude IS NOT NULL
+            HAVING jarak_meter <= %s
+            ORDER BY jarak_meter ASC
+            LIMIT %s
+        """
+        cursor.execute(query, (latitude, longitude, latitude, radius_meter, limit))
+        results = cursor.fetchall()
+        
+        return {
+            "rekomendasi": results,
+            "total": len(results)
+        }
+    finally:
+        cursor.close()
+        db.close()

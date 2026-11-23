@@ -48,6 +48,16 @@ def get_fasilitas_by_kategori(
 def get_rute_fasilitas(id_fasilitas: int, current_user: dict = Depends(get_current_user)):
     return master_controller.get_rute_fasilitas(id_fasilitas)
 
+@router.get("/rekomendasi-fasilitas")
+def get_rekomendasi_fasilitas(
+    latitude: float = Query(..., description="Latitude lokasi user"),
+    longitude: float = Query(..., description="Longitude lokasi user"),
+    radius_meter: int = Query(500, ge=100, le=5000, description="Radius pencarian dalam meter"),
+    limit: int = Query(10, ge=1, le=20, description="Maksimal hasil"),
+    current_user: dict = Depends(get_current_user)
+):
+    return master_controller.get_rekomendasi_fasilitas(latitude, longitude, radius_meter, limit)
+
 @router.get("/notifikasi")
 def get_notifikasi(
     page: int = Query(1, ge=1, description="Page number"),

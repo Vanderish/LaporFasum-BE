@@ -18,6 +18,7 @@ def create_laporan(
     latitude: float = Form(...),
     longitude: float = Form(...),
     id_kecamatan_kejadian: Optional[int] = Form(None),
+    id_fasilitas_umum: Optional[int] = Form(None),
     foto_bukti: UploadFile = File(...),
     current_user: dict = None
 ):
@@ -64,9 +65,9 @@ def create_laporan(
             id_kecamatan_kejadian = current_user.get("id_kecamatan")
         
         cursor.execute("""
-            INSERT INTO laporan (judul_laporan, deskripsi_laporan, foto_bukti, latitude, longitude, status_terkini, id_kategori, id_kecamatan_kejadian, id_pelapor)
-            VALUES (%s, %s, %s, %s, %s, 'Menunggu Verifikasi', NULL, %s, %s)
-        """, (judul_laporan, deskripsi, foto_url, latitude, longitude, id_kecamatan_kejadian, id_user))
+            INSERT INTO laporan (judul_laporan, deskripsi_laporan, foto_bukti, latitude, longitude, status_terkini, id_kategori, id_kecamatan_kejadian, id_fasilitas_umum, id_pelapor)
+            VALUES (%s, %s, %s, %s, %s, 'Menunggu Verifikasi', NULL, %s, %s, %s)
+        """, (judul_laporan, deskripsi, foto_url, latitude, longitude, id_kecamatan_kejadian, id_fasilitas_umum, id_user))
         db.commit()
         
         id_laporan = cursor.lastrowid

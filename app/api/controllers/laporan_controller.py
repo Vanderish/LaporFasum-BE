@@ -297,13 +297,13 @@ def update_laporan_status(id_laporan: int, status_terkini: str, kewenangan_penan
         if status_terkini not in valid_status:
             raise HTTPException(status_code=400, detail="Status tidak valid")
         
+        valid_kewenangan_enum = ["Desa", "Kecamatan", "Kabupaten", "Provinsi", "Nasional"]
         if kewenangan_penanganan and kewenangan_penanganan.strip():
-            # Skip validation for Admin Kab -> Selesai (opsional)
-            if not (id_role == 3 and status_terkini == "Selesai"):
-                cursor.execute("SELECT tingkat_kewenangan FROM instansi_kewenangan")
-                valid_kewenangan = [row["tingkat_kewenangan"] for row in cursor.fetchall()]
-                if kewenangan_penanganan not in valid_kewenangan:
-                    raise HTTPException(status_code=400, detail=f"Kewenangan penanganan tidak valid. Pilihan: {', '.join(valid_kewenangan)}")
+            if kewenangan_penanganan not in valid_kewenangan_enum:
+                raise HTTPException(
+                    status_code=400, 
+                    detail=f"Kewenangan penanganan '{kewenangan_penanganan}' tidak valid. Pilihan yang tersedia: {', '.join(valid_kewenangan_enum)}"
+                )
         else:
             kewenangan_penanganan = None
         

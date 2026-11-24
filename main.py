@@ -1,5 +1,6 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from app.api.routes import auth_route
 from app.api.routes import user_route
 from app.api.routes import admin_kecamatan_route
@@ -40,6 +41,23 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"]
 )
+
+# Global exception handler to ensure CORS headers on all error responses
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    # Get the origin from request
+    origin = request.headers.get("origin", "")
+    # Only allow known origins
+    allowed_origin = origin if origin in origins else (origins[0] if origins else "")
+    
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "Internal Server Error"},
+        headers={
+            "Access-Control-Allow-Origin": allowed_origin,
+            "Access-Control-Allow-Credentials": "true",
+        }
+    )
 
 cloudinary.config(
   cloud_name = os.getenv("CLOUDINARY_CLOUD_NAME", "nama_cloud_kamu"),

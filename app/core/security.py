@@ -1,6 +1,7 @@
 import os
 import hashlib
 from datetime import datetime, timedelta, timezone
+from zoneinfo import ZoneInfo
 from jose import JWTError, jwt
 from dotenv import load_dotenv
 import bcrypt
@@ -10,6 +11,8 @@ load_dotenv()
 USER_SECRET = os.getenv("USER_SECRET", "default_user_secret")
 ADMIN_KEC_SECRET = os.getenv("ADMIN_KEC_SECRET", "default_admin_kec_secret")
 ADMIN_KAB_SECRET = os.getenv("ADMIN_KAB_SECRET", "default_admin_kab_secret")
+
+WIB = ZoneInfo("Asia/Jakarta")
 
 def get_secret_by_role(id_role: int) -> str:
     if id_role == 1:
@@ -45,9 +48,9 @@ def get_password_hash(password):
 def create_access_token(data: dict, expires_delta: timedelta | None = None):
     to_encode = data.copy()
     if expires_delta:
-        expire = datetime.now(timezone.utc) + expires_delta
+        expire = datetime.now(WIB) + expires_delta
     else:
-        expire = datetime.now(timezone.utc) + timedelta(minutes=15)
+        expire = datetime.now(WIB) + timedelta(minutes=15)
     to_encode.update({"exp": expire})
     id_role = to_encode.get("id_role")
     if id_role is None:
